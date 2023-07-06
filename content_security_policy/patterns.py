@@ -1,6 +1,6 @@
 __all__ = ["ALPHA", "DIGIT", "BASE64_VALUE", "SCHEME", "HOST_SOURCE", "KEYWORD_SOURCE"]
 
-from content_security_policy.constants import KEYWORD_SOURCES
+from content_security_policy.constants import KEYWORD_SOURCES, WEBRTC_VALUES
 
 import re
 from typing import cast
@@ -29,10 +29,15 @@ SCHEME = cast(re.Pattern, rf"{ALPHA}({ALPHA}|{DIGIT}|[+-.])*")
 HOST_CHAR = f"({ALPHA}|{DIGIT}|-)"
 HOST_PART = rf"(\*|(\*\.)?{HOST_CHAR}+(\.{HOST_CHAR}+))"
 PORT_PART = rf"(\*|{DIGIT}+)"
-HOST_SOURCE = cast(re.Pattern, f"({SCHEME}://)?{HOST_PART}(:{PORT_PART})?{PATH_ABSOLUTE}?")
+HOST_SOURCE = cast(
+    re.Pattern, f"({SCHEME}://)?{HOST_PART}(:{PORT_PART})?{PATH_ABSOLUTE}?"
+)
 
 # https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
 KEYWORD_SOURCE = cast(re.Pattern, "|".join(KEYWORD_SOURCES))
+
+# https://w3c.github.io/webappsec-csp/#directive-webrtc
+WEBRTC_VALUE = cast(re.Pattern, "|".join(WEBRTC_VALUES))
 
 # workaround for the "want to reuse patters but also want to precompile them"-problem
 for name in __all__:

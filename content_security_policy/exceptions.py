@@ -6,6 +6,10 @@ class BadSourceExpression(BadCsp):
     ...
 
 
+class BadSourceList(BadCsp):
+    ...
+
+
 class BadDirective(BadCsp):
     ...
 

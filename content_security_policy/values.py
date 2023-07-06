@@ -1,28 +1,39 @@
 __all__ = [
-    "SourceExpression",
     "NonceSrc",
     "HashAlgorithm",
     "HashSrc",
     "SchemeSrc",
     "HostSrc",
     "KeywordSource",
+    "SourceExpression",
+    "SourceList",
+    "WebrtcValue",
+    "AncestorSource",
+    "AncestorSourceList",
 ]
 
-from abc import ABC
 from enum import StrEnum
-from typing import Optional, cast
+from typing import Optional, Tuple, Union, cast
 
-from content_security_policy.constants import NONCE_PREFIX, KEYWORD_SOURCES
+from content_security_policy.constants import (
+    NONCE_PREFIX,
+    KEYWORD_SOURCES,
+    WEBRTC_VALUES,
+    NONE,
+    SELF,
+)
 from content_security_policy.exceptions import BadSourceExpression
 from content_security_policy.patterns import (
     BASE64_VALUE,
     SCHEME,
     HOST_SOURCE,
     KEYWORD_SOURCE as KEYWORD_SOURCE_RE,
+    WEBRTC_VALUE as WEBRTC_VALUE_RE,
 )
+from content_security_policy.utils import SingleValueClass, AutoInstanceMixin
 
 
-class SourceExpression(ABC):
+class SourceExpression:
     ...
 
 
@@ -100,8 +111,8 @@ class HostSrc(SourceExpression):
 
 
 # https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
-class KeywordSource(SourceExpression):
-    # You can later get an instance of any keyword source by accessing these as class attributes
+class KeywordSource(AutoInstanceMixin, SourceExpression):
+    # You can later get an instance of any value source by accessing these as class attributes
     # They are spelled out explicitly here so type hints work
     self = cast("KeywordSource", "'self'")
     unsafe_inline = cast("KeywordSource", "'unsafe-inline'")
@@ -111,6 +122,7 @@ class KeywordSource(SourceExpression):
     report_sample = cast("KeywordSource", "'report-sample'")
     unsafe_allow_redirects = cast("KeywordSource", "'unsafe-allow-redirects'")
     wasm_unsafe_eval = cast("KeywordSource", "'wasm-unsafe-eval'")
+    _auto_instance_prop = KEYWORD_SOURCES
 
     def __init__(self, keyword: str):
         keyword = str(keyword)
@@ -126,13 +138,43 @@ class KeywordSource(SourceExpression):
     def __str__(self):
         return f"'{self._keyword}'"
 
-    # Black magic to generate class attributes that are instances of the class
-    for keyword in KEYWORD_SOURCES:
-        prop_name = keyword.replace("-", "_").strip("'")
 
-        def factory(cls, sneak_me=keyword):
-            return cls(sneak_me)
+# According to spec, 'none'  is not a `source-expression`, but a special case of `serialized-source-list`
+# https://w3c.github.io/webappsec-csp/#grammardef-serialized-source-list
+class NoneSource(SingleValueClass):
+    _value = NONE
 
-        locals()[prop_name] = classmethod(property(factory))
 
-    del factory
+# https://w3c.github.io/webappsec-csp/#grammardef-serialized-source-list
+SourceList = Union[Tuple[SourceExpression] | NoneSource]
+
+
+class WebrtcValue(AutoInstanceMixin):
+    # You can later get an instance of any value by accessing these as class attributes
+    # They are spelled out explicitly here so type hints work
+    allow = cast("WebrtcValue", "'allow'")
+    block = cast("WebrtcValue", "'block'")
+    _auto_instance_prop = WEBRTC_VALUES
+
+    def __init__(self, value: str):
+        value = str(value)
+        no_ticks_keyword = value.strip("'")
+        value = f"'{no_ticks_keyword}'"
+        if not WEBRTC_VALUE_RE.fullmatch(value):
+            raise BadSourceExpression(
+                f"{value} does not match {KEYWORD_SOURCE_RE.pattern}"
+            )
+        self._keyword = no_ticks_keyword
+
+    def __str__(self):
+        return f"'{self._keyword}'"
+
+
+# 'self' is a keyword source expression, but it is also a possible value for frame-ancestors
+class Self(SingleValueClass):
+    _value = SELF
+
+
+# https://w3c.github.io/webappsec-csp/#grammardef-ancestor-source-list
+AncestorSource = Union[SchemeSrc, HostSrc, Self]
+AncestorSourceList = Union[Tuple[AncestorSource] | NoneSource]

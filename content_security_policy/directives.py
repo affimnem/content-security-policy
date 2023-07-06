@@ -2,96 +2,108 @@
 Actual directives, I would have loved to generate these classes dynamically, but then autocompletion tools won't
 properly pick up on them.
 """
-from content_security_policy.base_classes import Directive, SrcDirective
+from content_security_policy.base_classes import Directive, FetchDirective
+from content_security_policy.values import SourceList, AncestorSourceList
 
 
-class ChildSrc(SrcDirective):
+# Fetch Directives
+class ChildSrc(FetchDirective):
     name = "child-src"
 
 
-class ConnectSrc(SrcDirective):
+class ConnectSrc(FetchDirective):
     name = "connect-src"
 
 
-class DefaultSrc(SrcDirective):
+class DefaultSrc(FetchDirective):
     name = "default-src"
 
 
-class FontSrc(SrcDirective):
+class FontSrc(FetchDirective):
     name = "font-src"
 
 
-class FrameSrc(SrcDirective):
+class FrameSrc(FetchDirective):
     name = "frame-src"
 
 
-class ImgSrc(SrcDirective):
+class ImgSrc(FetchDirective):
     name = "img-src"
 
 
-class ManifestSrc(SrcDirective):
+class ManifestSrc(FetchDirective):
     name = "manifest-src"
 
 
-class MediaSrc(SrcDirective):
+class MediaSrc(FetchDirective):
     name = "media-src"
 
 
-class ObjectSrc(SrcDirective):
+class ObjectSrc(FetchDirective):
     name = "object-src"
 
 
-class ScriptSrc(SrcDirective):
+class ScriptSrc(FetchDirective):
     name = "script-src"
 
 
-class ScriptSrcElem(SrcDirective):
+class ScriptSrcElem(FetchDirective):
     name = "script-src-elem"
 
 
-class ScriptSrcAttr(SrcDirective):
+class ScriptSrcAttr(FetchDirective):
     name = "script-src-attr"
 
 
-class StyleSrc(SrcDirective):
+class StyleSrc(FetchDirective):
     name = "style-src"
 
 
-class StyleSrcElem(SrcDirective):
+class StyleSrcElem(FetchDirective):
     name = "style-src-elem"
 
 
-class StyleSrcAttr(SrcDirective):
+class StyleSrcAttr(FetchDirective):
     name = "style-src-attr"
 
 
-class ReportUri(Directive):
-    name = "report-uri"
-
-
-class BaseUri(Directive):
-    name = "base-uri"
-
-
-class WorkerSrc(Directive):
-    name = "worker-src"
-
-
-class Webrtc(Directive):
+# Other directives
+# TODO: Allows only one value!
+class Webrtc(Directive[SourceList]):
     name = "webrtc"
 
 
-class ReportTo(Directive):
-    name = "report-to"
+class WorkerSrc(Directive[SourceList]):
+    name = "worker-src"
 
 
-class FrameAncestors(Directive):
-    name = "frame-ancestors"
+# Document directives
+class BaseUri(Directive[SourceList]):
+    name = "base-uri"
 
 
+# TODO: Special value for sandbox tokens
 class Sandbox(Directive):
     name = "sandbox"
 
 
-class FormAction(Directive):
+# Navigation directives
+class FormAction(Directive[SourceList]):
     name = "form-action"
+
+
+class FrameAncestors(Directive[AncestorSourceList]):
+    name = "frame-ancestors"
+
+
+# Reporting directives
+
+
+# TODO uri-reference value
+class ReportUri(Directive):
+    name = "report-uri"
+
+
+# TODO "token" value
+class ReportTo(Directive):
+    name = "report-to"

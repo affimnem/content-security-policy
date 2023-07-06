@@ -1,13 +1,21 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Type, TypeVar
+from typing import Type, TypeVar, Tuple, Generic
 
-from content_security_policy.constants import CSPLevels
-from content_security_policy.exceptions import BadDirective, BadPolicy
-from content_security_policy.sources import SourceExpression
+from content_security_policy.constants import CSPLevels, VALUE_SEPARATOR
+from content_security_policy.exceptions import BadPolicy, BadSourceList
+from content_security_policy.values import SourceExpression, SourceList, NoneSource
+
+SelfType = TypeVar("SelfType", bound="Directive")
+ValueType = TypeVar("ValueType")
 
 
-class Directive(ABC):
+class Directive(ABC, Generic[ValueType]):
+    _value: ValueType
+
+    def __init__(self, *values: ValueType):
+        self._value = tuple(values)
+
     @property
     @abstractmethod
     def name(self) -> str:
@@ -15,25 +23,58 @@ class Directive(ABC):
         Name of the directive.
         """
 
-
-SameClass = TypeVar("SameClass", bound=Directive)
-
-
-class SrcDirective(Directive, ABC):
-    def __init__(self, *sources: SourceExpression):
-        if not sources:
-            raise BadDirective(f"Must provide at least one source expression.")
-        self._sources = tuple(sources)
+    @property
+    def value(self) -> str:
+        """
+        Return the complete value of the directive as a string
+        :return:
+        """
+        return VALUE_SEPARATOR.join(self.values)
 
     @property
-    def sources(self):
-        return self._sources
+    def values(self) -> Tuple[ValueType]:
+        """
+        All values of the directive as a tuple
+        :return:
+        """
+        return self._value if isinstance(self._value, tuple) else (self._value,)
 
-    def __add__(self: SameClass, other: SourceExpression) -> SameClass:
-        return type(self)(*self._sources, other)
+    def __str__(self):
+        return f"{self.name}{VALUE_SEPARATOR}{self.value}"
 
-    def __sub__(self: SameClass, other: SourceExpression) -> SameClass:
+    def __iter__(self):
+        """
+        Iterate the directives values.
+        """
+        yield from self.values
+
+    def __add__(self: SelfType, other: ValueType) -> SelfType:
+        return type(self)(*self.values, other)
+
+    def __sub__(self: SelfType, other: ValueType) -> SelfType:
         raise NotImplemented
+
+    def get_effective_directive(self: SelfType) -> SelfType:
+        """
+        Return a directive without any values that a browser with level `level` would ignore.
+        """
+
+
+class FetchDirective(Directive[SourceList], ABC):
+    def __init__(self, *sources: SourceExpression):
+        if len(sources) > 1 and any(src == NoneSource for src in sources):
+            raise BadSourceList(
+                f"{NoneSource} may not be combined with other source expressions."
+            )
+        super().__init__(*sources)
+
+    def __add__(self: SelfType, other: SourceExpression) -> SelfType:
+        if self.values and other == NoneSource:
+            raise BadSourceList(
+                f"{NoneSource} may not be combined with other source expressions."
+            )
+
+        return type(self)(*self.values, other)
 
 
 class Policy:
@@ -72,16 +113,14 @@ class Policy:
         raise NotImplemented
 
     def __iter__(self):
-        """Iterate over directives.
-        :return:
+        """
+        Iterate over directives.
         """
         yield from self._directives
 
     def get_effective_policy(self, level: CSPLevels = CSPLevels.level_3) -> Policy:
         """
-        Return a policy with all directives and directive arguments that a browser with level `level` would ignore.
-        :param level:
-        :return:
+        Return a policy without any directives or directive values that a browser with level `level` would ignore.
         """
         raise NotImplemented
 
@@ -91,6 +130,9 @@ class PolicySet:
         raise NotImplemented
 
     def get_effective_policy_set(
-            self, level: CSPLevels = CSPLevels.level_3
-    ) -> "Policy":
+        self, level: CSPLevels = CSPLevels.level_3
+    ) -> PolicySet:
+        """
+        Return a policy set without any directives or directive values that a browser with level `level` would ignore.
+        """
         raise NotImplemented

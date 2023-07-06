@@ -24,11 +24,11 @@ REPORTING_DIRECTIVE_NAMES = ("report-uri", "report-to")
 OTHER_DIRECTIVE_NAMES = ("webrtc", "worker-src")
 
 DIRECTIVE_NAMES = (
-        FETCH_DIRECTIVE_NAMES
-        + DOCUMENT_DIRECTIVE_NAMES
-        + NAVIGATION_DIRECTIVE_NAMES
-        + REPORTING_DIRECTIVE_NAMES
-        + OTHER_DIRECTIVE_NAMES
+    FETCH_DIRECTIVE_NAMES
+    + DOCUMENT_DIRECTIVE_NAMES
+    + NAVIGATION_DIRECTIVE_NAMES
+    + REPORTING_DIRECTIVE_NAMES
+    + OTHER_DIRECTIVE_NAMES
 )
 
 
@@ -46,10 +46,25 @@ class CSPLevels(StrEnum):
 
 
 # https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
-KEYWORD_SOURCES = ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'strict-dynamic'", "'unsafe-hashes'",
-                   "'report-sample'", "'unsafe-allow-redirects'", "'wasm-unsafe-eval'"]
+KEYWORD_SOURCES = [
+    "'self'",
+    "'unsafe-inline'",
+    "'unsafe-eval'",
+    "'strict-dynamic'",
+    "'unsafe-hashes'",
+    "'report-sample'",
+    "'unsafe-allow-redirects'",
+    "'wasm-unsafe-eval'",
+]
 
-
+# https://w3c.github.io/webappsec-csp/#directive-webrtc
+WEBRTC_VALUES = ["'allow'", "'block'"]
 
 # https://w3c.github.io/webappsec-csp/#grammardef-nonce-source
 NONCE_PREFIX = "nonce-"
+
+NONE = "'none'"
+
+SELF = "'self'"
+
+VALUE_SEPARATOR = " "
