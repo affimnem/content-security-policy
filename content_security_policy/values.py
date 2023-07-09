@@ -10,10 +10,11 @@ __all__ = [
     "WebrtcValue",
     "AncestorSource",
     "AncestorSourceList",
+    "SandboxValue",
 ]
 
 from enum import StrEnum
-from typing import Optional, Tuple, Union, cast
+from typing import Optional, Tuple, Union, cast, Literal
 
 from content_security_policy.constants import (
     NONCE_PREFIX,
@@ -21,14 +22,16 @@ from content_security_policy.constants import (
     WEBRTC_VALUES,
     NONE,
     SELF,
+    SANDBOX_VALUES,
 )
-from content_security_policy.exceptions import BadSourceExpression
+from content_security_policy.exceptions import BadDirectiveValue, BadSourceExpression
 from content_security_policy.patterns import (
     BASE64_VALUE,
     SCHEME,
     HOST_SOURCE,
     KEYWORD_SOURCE as KEYWORD_SOURCE_RE,
     WEBRTC_VALUE as WEBRTC_VALUE_RE,
+    SANDBOX_VALUE as SANDBOX_VALUE_RE,
 )
 from content_security_policy.utils import SingleValueClass, AutoInstanceMixin
 
@@ -171,6 +174,7 @@ class WebrtcValue(AutoInstanceMixin):
 
 
 # 'self' is a keyword source expression, but it is also a possible value for frame-ancestors
+# Other KeywordSources are not valid values for frame-ancestors.
 class Self(SingleValueClass):
     _value = SELF
 
@@ -178,3 +182,44 @@ class Self(SingleValueClass):
 # https://w3c.github.io/webappsec-csp/#grammardef-ancestor-source-list
 AncestorSource = Union[SchemeSrc, HostSrc, Self]
 AncestorSourceList = Union[Tuple[AncestorSource] | NoneSource]
+
+
+# https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-elemet
+class SandboxToken(AutoInstanceMixin):
+    # You can later get an instance of any value by accessing these as class attributes
+    # They are spelled out explicitly here so type hints work
+    allow_downloads = cast("SandboxToken", "allow-downloads")
+    allow_forms = cast("SandboxToken", "allow-forms")
+    allow_modals = cast("SandboxToken", "allow-modals")
+    allow_orientation_lock = cast("SandboxToken", "allow-orientation-lock")
+    allow_pointer_lock = cast("SandboxToken", "allow-pointer-lock")
+    allow_popups = cast("SandboxToken", "allow-popups")
+    allow_popups_to_escape_sandbox = cast(
+        "SandboxToken", "allow-popups-to-escape-sandbox"
+    )
+    allow_presentation = cast("SandboxToken", "allow-presentation")
+    allow_same_origin = cast("SandboxToken", "allow-same-origin")
+    allow_scripts = cast("SandboxToken", "allow-scripts")
+    allow_top_navigation = cast("SandboxToken", "allow-top-navigation")
+    allow_top_navigation_by_user_activation = cast(
+        "SandboxToken", "allow-top-navigation-by-user-activation"
+    )
+    allow_top_navigation_to_custom_protocols = cast(
+        "SandboxToken", "allow-top-navigation-to-custom-protocols"
+    )
+    _auto_instance_prop = SANDBOX_VALUES
+
+    def __init__(self, value: str):
+        value = str(value)
+        if not SANDBOX_VALUE_RE.fullmatch(value):
+            raise BadDirectiveValue(
+                f"{value} does not match {SANDBOX_VALUE_RE.pattern}"
+            )
+        self._token = value.lower()
+
+    def __str__(self):
+        # Unlike other "keywords" in CSP, sandbox values are not wrapped in single ticks
+        return self._token
+
+
+SandboxValue = Union[Tuple[SandboxToken], Literal[""]]

@@ -3,7 +3,7 @@ Actual directives, I would have loved to generate these classes dynamically, but
 properly pick up on them.
 """
 from content_security_policy.base_classes import Directive, FetchDirective
-from content_security_policy.values import SourceList, AncestorSourceList
+from content_security_policy.values import SourceList, AncestorSourceList, SandboxValue
 
 
 # Fetch Directives
@@ -82,8 +82,7 @@ class BaseUri(Directive[SourceList]):
     name = "base-uri"
 
 
-# TODO: Special value for sandbox tokens
-class Sandbox(Directive):
+class Sandbox(Directive[SandboxValue]):
     name = "sandbox"
 
 

@@ -46,7 +46,7 @@ class CSPLevels(StrEnum):
 
 
 # https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
-KEYWORD_SOURCES = [
+KEYWORD_SOURCES = (
     "'self'",
     "'unsafe-inline'",
     "'unsafe-eval'",
@@ -55,7 +55,7 @@ KEYWORD_SOURCES = [
     "'report-sample'",
     "'unsafe-allow-redirects'",
     "'wasm-unsafe-eval'",
-]
+)
 
 # https://w3c.github.io/webappsec-csp/#directive-webrtc
 WEBRTC_VALUES = ["'allow'", "'block'"]
@@ -68,3 +68,20 @@ NONE = "'none'"
 SELF = "'self'"
 
 VALUE_SEPARATOR = " "
+
+# https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-elemet
+SANDBOX_VALUES = (
+    "allow-downloads",
+    "allow-forms",
+    "allow-modals",
+    "allow-orientation-lock",
+    "allow-pointer-lock",
+    "allow-popups",
+    "allow-popups-to-escape-sandbox",
+    "allow-presentation",
+    "allow-same-origin",
+    "allow-scripts",
+    "allow-top-navigation",
+    "allow-top-navigation-by-user-activation",
+    "allow-top-navigation-to-custom-protocols",
+)

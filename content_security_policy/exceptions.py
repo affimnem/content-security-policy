@@ -2,11 +2,15 @@ class BadCsp(Exception):
     ...
 
 
-class BadSourceExpression(BadCsp):
+class BadDirectiveValue(BadCsp):
     ...
 
 
-class BadSourceList(BadCsp):
+class BadSourceExpression(BadDirectiveValue):
+    ...
+
+
+class BadSourceList(BadDirectiveValue):
     ...
 
 

@@ -1,6 +1,20 @@
-__all__ = ["ALPHA", "DIGIT", "BASE64_VALUE", "SCHEME", "HOST_SOURCE", "KEYWORD_SOURCE"]
+__all__ = [
+    "ALPHA",
+    "DIGIT",
+    "BASE64_VALUE",
+    "SCHEME",
+    "HOST_SOURCE",
+    "KEYWORD_SOURCE",
+    "SANDBOX_VALUE",
+]
+# These expressions will be compiled with re.IGNORECASE
+__case_insensitive__ = {"SANDBOX_VALUE"}
 
-from content_security_policy.constants import KEYWORD_SOURCES, WEBRTC_VALUES
+from content_security_policy.constants import (
+    KEYWORD_SOURCES,
+    WEBRTC_VALUES,
+    SANDBOX_VALUES,
+)
 
 import re
 from typing import cast
@@ -39,9 +53,14 @@ KEYWORD_SOURCE = cast(re.Pattern, "|".join(KEYWORD_SOURCES))
 # https://w3c.github.io/webappsec-csp/#directive-webrtc
 WEBRTC_VALUE = cast(re.Pattern, "|".join(WEBRTC_VALUES))
 
+SANDBOX_VALUE = cast(re.Pattern, "|".join(SANDBOX_VALUES))
+
 # workaround for the "want to reuse patters but also want to precompile them"-problem
 for name in __all__:
-    locals()[name] = re.compile(locals()[name])
+    if name in __case_insensitive__:
+        locals()[name] = re.compile(locals()[name], flags=re.IGNORECASE)
+    else:
+        locals()[name] = re.compile(locals()[name])
 
 # Convenience for debug
 if __name__ == "__main__":
