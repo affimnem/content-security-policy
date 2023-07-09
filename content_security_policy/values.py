@@ -11,6 +11,9 @@ __all__ = [
     "AncestorSource",
     "AncestorSourceList",
     "SandboxValue",
+    "ReportToValue",
+    "UriReference",
+    "ReportUriValue",
 ]
 
 from enum import StrEnum
@@ -26,9 +29,11 @@ from content_security_policy.constants import (
 )
 from content_security_policy.exceptions import BadDirectiveValue, BadSourceExpression
 from content_security_policy.patterns import (
+    TOKEN,
     BASE64_VALUE,
     SCHEME,
     HOST_SOURCE,
+    URI_REFERENCE,
     KEYWORD_SOURCE as KEYWORD_SOURCE_RE,
     WEBRTC_VALUE as WEBRTC_VALUE_RE,
     SANDBOX_VALUE as SANDBOX_VALUE_RE,
@@ -223,3 +228,30 @@ class SandboxToken(AutoInstanceMixin):
 
 
 SandboxValue = Union[Tuple[SandboxToken], Literal[""]]
+
+
+# https://w3c.github.io/webappsec-csp/#directive-report-to
+class ReportToValue:
+    def __init__(self, value: str):
+        value = str(value)
+        if not TOKEN.fullmatch(value):
+            raise BadDirectiveValue(f"{value} does not match {TOKEN.pattern}")
+        self._token = value.lower()
+
+    def __str__(self):
+        return self._token
+
+
+# https://w3c.github.io/webappsec-csp/#directive-report-uri
+class UriReference:
+    def __init__(self, value: str):
+        value = str(value)
+        if not URI_REFERENCE.fullmatch(value):
+            raise BadDirectiveValue(f"{value} does not match {URI_REFERENCE.pattern}")
+        self._uri_reference = value.lower()
+
+    def __str__(self):
+        return self._uri_reference
+
+
+ReportUriValue = Tuple[UriReference]

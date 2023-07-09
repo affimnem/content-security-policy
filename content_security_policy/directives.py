@@ -2,8 +2,18 @@
 Actual directives, I would have loved to generate these classes dynamically, but then autocompletion tools won't
 properly pick up on them.
 """
-from content_security_policy.base_classes import Directive, FetchDirective
-from content_security_policy.values import SourceList, AncestorSourceList, SandboxValue
+from content_security_policy.base_classes import (
+    Directive,
+    SingleValueDirective,
+    FetchDirective,
+)
+from content_security_policy.values import (
+    SourceList,
+    AncestorSourceList,
+    SandboxValue,
+    ReportToValue,
+    ReportUriValue,
+)
 
 
 # Fetch Directives
@@ -68,8 +78,7 @@ class StyleSrcAttr(FetchDirective):
 
 
 # Other directives
-# TODO: Allows only one value!
-class Webrtc(Directive[SourceList]):
+class Webrtc(SingleValueDirective[SourceList]):
     name = "webrtc"
 
 
@@ -96,13 +105,9 @@ class FrameAncestors(Directive[AncestorSourceList]):
 
 
 # Reporting directives
-
-
-# TODO uri-reference value
-class ReportUri(Directive):
+class ReportUri(Directive[ReportUriValue]):
     name = "report-uri"
 
 
-# TODO "token" value
-class ReportTo(Directive):
+class ReportTo(SingleValueDirective[ReportToValue]):
     name = "report-to"

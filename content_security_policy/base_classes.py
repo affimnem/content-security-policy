@@ -60,6 +60,11 @@ class Directive(ABC, Generic[ValueType]):
         """
 
 
+class SingleValueDirective(Directive, ABC):
+    def __init__(self, value):
+        super().__init__(value)
+
+
 class FetchDirective(Directive[SourceList], ABC):
     def __init__(self, *sources: SourceExpression):
         if len(sources) > 1 and any(src == NoneSource for src in sources):
