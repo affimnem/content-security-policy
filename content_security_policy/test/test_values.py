@@ -20,7 +20,7 @@ class KeywordSourceAttributes(TestCase):
 
 class NoneSourceStr(TestCase):
     def test_instance_str(self):
-        self.assertEquals(str(NoneSrc()), NONE)
+        self.assertEqual(str(NoneSrc()), NONE)
 
     def test_class_str(self):
-        self.assertEquals(str(NoneSrc), NONE)
+        self.assertEqual(str(NoneSrc), NONE)
