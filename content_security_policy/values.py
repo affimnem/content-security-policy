@@ -9,6 +9,7 @@ __all__ = [
     "SourceList",
     "WebrtcValue",
     "NoneSrc",
+    "SelfSrc",
     "AncestorSource",
     "AncestorSourceList",
     "SandboxValue",
@@ -18,7 +19,7 @@ __all__ = [
 ]
 
 from enum import StrEnum
-from typing import Optional, Tuple, Union, cast, Literal
+from typing import Optional, Tuple, Union, cast, Literal, Type
 
 from content_security_policy.constants import (
     NONCE_PREFIX,
@@ -154,8 +155,11 @@ class NoneSrc(SingleValueClass):
     _value = NONE
 
 
+# Can be passed as class or an instance
+NoneSrcType = Union[NoneSrc, Type[NoneSrc]]
+
 # https://w3c.github.io/webappsec-csp/#grammardef-serialized-source-list
-SourceList = Union[Tuple[SourceExpression] | NoneSrc]
+SourceList = Union[Tuple[SourceExpression], NoneSrcType]
 
 
 class WebrtcValue(AutoInstanceMixin):
@@ -222,13 +226,16 @@ SandboxValue = Union[Tuple[SandboxToken], Literal[""]]
 
 # 'self' is a keyword source expression, but it is also a possible value for frame-ancestors, whereas other
 # KeywordSources are not valid values for frame-ancestors.
-class Self(SingleValueClass):
+class SelfSrc(SingleValueClass):
     _value = SELF
 
 
+# Can be passed as class or an instance
+SelfSrcType = Union[SelfSrc, Type[SelfSrc]]
+
 # https://w3c.github.io/webappsec-csp/#grammardef-ancestor-source-list
-AncestorSource = Union[SchemeSrc, HostSrc, Self]
-AncestorSourceList = Union[Tuple[AncestorSource] | NoneSrc]
+AncestorSource = Union[SchemeSrc, HostSrc, SelfSrcType]
+AncestorSourceList = Union[Tuple[AncestorSource], NoneSrcType]
 
 
 # https://w3c.github.io/webappsec-csp/#directive-report-to
