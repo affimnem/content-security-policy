@@ -112,20 +112,16 @@ class FormAction(Directive[SourceList]):
 class FrameAncestors(Directive[AncestorSourceList]):
     name = "frame-ancestors"
 
-    def __init__(self, *sources: AncestorSource):
+    def __init__(self, *sources: Union[AncestorSource, NoneSrcType]):
+        """
+        Create frame-ancestors from NoneSrc XOR an arbitrary number of AncestorSource.
+        :param sources: Allowed frame ancestors.
+        """
         if len(sources) > 1 and any(src == NoneSrc for src in sources):
             raise BadDirectiveValue(
                 f"{NoneSrc} may not be combined with other ancestor sources."
             )
         super().__init__(*sources)
-
-    def __add__(self: SelfType, other: AncestorSource) -> SelfType:
-        if self.values and other == NoneSrc:
-            raise BadDirectiveValue(
-                f"{NoneSrc} may not be combined with other ancestor sources."
-            )
-
-        return type(self)(*self.values, other)
 
 
 # Reporting directives
