@@ -38,7 +38,7 @@ content_security_policy.exceptions.BadSourceExpression: Nonce value 'ungültig' 
 
 ## Lenient parsing
 
-> :info: Parsing features are under construction.
+> :information_source: Parsing features are under construction.
 
 # Usage
 
