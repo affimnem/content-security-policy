@@ -2,19 +2,33 @@ __all__ = [
     "TOKEN",
     "BASE64_VALUE",
     "SCHEME",
+    "NONCE_SOURCE",
+    "HASH_SOURCE",
+    "SCHEME_SOURCE",
     "HOST_SOURCE",
+    "NONE_SOURCE",
+    "SELF_SOURCE",
     "URI_REFERENCE",
     "KEYWORD_SOURCE",
     "WEBRTC_VALUE",
     "SANDBOX_VALUE",
 ]
 # These expressions will be compiled with re.IGNORECASE
-__case_insensitive__ = {"SANDBOX_VALUE"}
+__case_insensitive__ = {
+    "SANDBOX_VALUE",
+    "NONCE_SOURCE",
+    "HASH-SOURCE",
+    "NONE_SOURCE",
+    "SELF_SOURCE",
+}
 
 from content_security_policy.constants import (
+    HASH_ALGORITHMS,
     KEYWORD_SOURCES,
     WEBRTC_VALUES,
     SANDBOX_VALUES,
+    NONE,
+    SELF,
 )
 
 import re
@@ -24,12 +38,16 @@ from typing import cast
 ALPHA = cast(re.Pattern, r"[A-Za-z]")
 DIGIT = cast(re.Pattern, r"[0-9]")
 
+# https://w3c.github.io/webappsec-csp/#grammardef-base64-value
+BASE64_VALUE = cast(re.Pattern, rf"({ALPHA}|{DIGIT}|[+\/\-_]){{2, 0}}={{0, 2}}")
+NONCE_SOURCE = cast(re.Pattern, f"'nonce-{BASE64_VALUE}'")
+HASH_SOURCE = cast(
+    re.Pattern, f"'({'|'.join(alg for alg in HASH_ALGORITHMS)})-{BASE64_VALUE}'"
+)
+
 # https://datatracker.ietf.org/doc/html/rfc9110#section-5.6.2
 TOKEN_CHAR = f"[!#$%&'*+\-.^_`|~]|{ALPHA}|{DIGIT}"
 TOKEN = cast(re.Pattern, f"({TOKEN_CHAR})+")
-
-# https://w3c.github.io/webappsec-csp/#grammardef-base64-value
-BASE64_VALUE = cast(re.Pattern, rf"({ALPHA}|{DIGIT}|[+\/\-_]){{2, 0}}={{0, 2}}")
 
 # https://datatracker.ietf.org/doc/html/rfc3986#appendix-A
 UNRESERVED = f"({ALPHA}|{DIGIT}|[-._~])"
@@ -77,6 +95,9 @@ RELATIVE_PART = f"((//{AUTHORITY}{PATH_AB_EMPTY})|({PATH_ABSOLUTE})|({PATH_NOSCH
 RELATIVE_REF = rf"({RELATIVE_PART})(\?{QUERY})?(#{FRAGMENT})?"
 URI_REFERENCE = cast(re.Pattern, f"({URI})|({RELATIVE_REF})")
 
+# https://w3c.github.io/webappsec-csp/#grammardef-scheme-source
+SCHEME_SOURCE = cast(re.Pattern, f"{SCHEME}:")
+
 # https://w3c.github.io/webappsec-csp/#grammardef-host-source
 SCHEME_PART = SCHEME
 HOST_CHAR = f"({ALPHA}|{DIGIT}|-)"
@@ -88,6 +109,10 @@ HOST_SOURCE = cast(
 )
 # https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
 KEYWORD_SOURCE = cast(re.Pattern, "|".join(KEYWORD_SOURCES))
+NONE_SOURCE = cast(re.Pattern, NONE)
+
+# https://w3c.github.io/webappsec-csp/#grammardef-ancestor-source-list
+SELF_SOURCE = cast(re.Pattern, SELF)
 
 # https://w3c.github.io/webappsec-csp/#directive-webrtc
 WEBRTC_VALUE = cast(re.Pattern, "|".join(WEBRTC_VALUES))

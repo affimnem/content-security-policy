@@ -1,5 +1,3 @@
-from enum import StrEnum
-
 # https://w3c.github.io/webappsec-csp/#csp-directives
 FETCH_DIRECTIVE_NAMES = (
     "child-src",
@@ -38,19 +36,12 @@ SOURCE_LIST_DIRECTIVES = FETCH_DIRECTIVE_NAMES + (
     "base-uri",
 )
 
-
-class HeaderNames(StrEnum):
-    content_security_policy = "Content-Security-Policy"
-    csp = content_security_policy
-    content_security_policy_report_only = content_security_policy + "-Report-Only"
-    csp_ro = content_security_policy_report_only
-
-
-class CSPLevels(StrEnum):
-    level_1 = "level_1"
-    level_2 = "level_2"
-    level_3 = "level_3"
-
+# https://w3c.github.io/webappsec-csp/#grammardef-hash-algorithm
+HASH_ALGORITHMS = (
+    "sha256",
+    "sha384",
+    "sha512",
+)
 
 # https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
 KEYWORD_SOURCES = (

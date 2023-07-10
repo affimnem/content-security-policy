@@ -1,6 +1,5 @@
 __all__ = [
     "NonceSrc",
-    "HashAlgorithm",
     "HashSrc",
     "SchemeSrc",
     "HostSrc",
@@ -19,16 +18,16 @@ __all__ = [
 ]
 
 from abc import ABC
-from enum import StrEnum
 import re
 from typing import Optional, Tuple, Union, cast, Literal, Type
 
 from content_security_policy.constants import (
+    HASH_ALGORITHMS,
     NONCE_PREFIX,
     KEYWORD_SOURCES,
-    WEBRTC_VALUES,
     NONE,
     SELF,
+    WEBRTC_VALUES,
     SANDBOX_VALUES,
 )
 from content_security_policy.exceptions import BadDirectiveValue, BadSourceExpression
@@ -36,8 +35,14 @@ from content_security_policy.patterns import (
     TOKEN,
     BASE64_VALUE,
     SCHEME,
+    NONCE_SOURCE,
+    HASH_SOURCE,
+    SCHEME_SOURCE,
     HOST_SOURCE,
+    NONE_SOURCE,
+    SELF_SOURCE,
     URI_REFERENCE,
+    # Appending _RE, so they are easier to distinguish from the constants
     KEYWORD_SOURCE as KEYWORD_SOURCE_RE,
     WEBRTC_VALUE as WEBRTC_VALUE_RE,
     SANDBOX_VALUE as SANDBOX_VALUE_RE,
@@ -54,18 +59,20 @@ class DirectiveValueItem(ABC):
     The two are not mutually exclusive. Some "items" may also be valid values by themselves.
     """
 
-    # Pattern used to identify these values
+    # Pattern used to identify these values when parsing
     _pattern: re.Pattern
     # String from which the value was created
     _parsed_string: Optional[str]
 
 
-class SourceExpression(DirectiveValueItem):
+class SourceExpression(DirectiveValueItem, ABC):
     ...
 
 
 # https://w3c.github.io/webappsec-csp/#grammardef-nonce-source
 class NonceSrc(SourceExpression):
+    _pattern = NONCE_SOURCE
+
     def __init__(self, nonce: str):
         nonce = nonce.strip("'").lstrip(NONCE_PREFIX)
         if not BASE64_VALUE.fullmatch(nonce):
@@ -79,16 +86,11 @@ class NonceSrc(SourceExpression):
         return f"'{NONCE_PREFIX}{self._nonce_value}'"
 
 
-# https://w3c.github.io/webappsec-csp/#grammardef-hash-algorithm
-class HashAlgorithm(StrEnum):
-    sha256 = "sha256"
-    sha384 = "sha384"
-    sha512 = "sha512"
-
-
 # https://w3c.github.io/webappsec-csp/#grammardef-nonce-source
 class HashSrc(SourceExpression):
-    def __init__(self, value: str, algo: Optional[HashAlgorithm | str] = None):
+    _pattern = HASH_SOURCE
+
+    def __init__(self, value: str, algo: Optional[str] = None):
         value = value.strip("'")
 
         if algo is not None:
@@ -96,7 +98,7 @@ class HashSrc(SourceExpression):
         else:
             algo, hash_value = value.split("-")
 
-        if not algo in HashAlgorithm:
+        if not algo in HASH_ALGORITHMS:
             raise BadSourceExpression(f"Unknown hash algorithm: '{algo}'")
 
         if not BASE64_VALUE.fullmatch(hash_value):
@@ -104,7 +106,7 @@ class HashSrc(SourceExpression):
                 f"Hash value '{hash_value}' does not match {BASE64_VALUE.pattern}"
             )
 
-        self._algo: HashAlgorithm = algo
+        self._algo: str = algo
         self._hash_value: str = hash_value
 
     def __str__(self):
@@ -113,6 +115,8 @@ class HashSrc(SourceExpression):
 
 # https://w3c.github.io/webappsec-csp/#grammardef-scheme-source
 class SchemeSrc(SourceExpression):
+    _pattern = SCHEME_SOURCE
+
     def __init__(self, scheme: str):
         scheme = scheme.rstrip(":")
         if not SCHEME.fullmatch(scheme):
@@ -128,6 +132,8 @@ class SchemeSrc(SourceExpression):
 
 # https://w3c.github.io/webappsec-csp/#grammardef-host-source
 class HostSrc(SourceExpression):
+    _pattern = HOST_SOURCE
+
     def __init__(self, host: str):
         if not HOST_SOURCE.fullmatch(host):
             raise BadSourceExpression(f"{host} does not match {HOST_SOURCE.pattern}")
@@ -139,6 +145,8 @@ class HostSrc(SourceExpression):
 
 # https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
 class KeywordSource(AutoInstanceMixin, SourceExpression):
+    _pattern = KEYWORD_SOURCE_RE
+
     # You can later get an instance of any value source by accessing these as class attributes
     # They are spelled out explicitly here so type hints work
     self = cast("KeywordSource", "'self'")
@@ -169,6 +177,7 @@ class KeywordSource(AutoInstanceMixin, SourceExpression):
 # According to spec, 'none'  is not a `source-expression`, but a special case of `serialized-source-list`
 # https://w3c.github.io/webappsec-csp/#grammardef-serialized-source-list
 class NoneSrc(SingleValueClass, DirectiveValueItem):
+    _pattern = NONE_SOURCE
     _value = NONE
 
 
@@ -244,6 +253,7 @@ SandboxValue = Union[Tuple[SandboxToken], Literal[""]]
 # 'self' is a keyword source expression, but it is also a possible value for frame-ancestors, whereas other
 # KeywordSources are not valid values for frame-ancestors.
 class SelfSrc(SingleValueClass, DirectiveValueItem):
+    _pattern = SELF_SOURCE
     _value = SELF
 
 
@@ -257,6 +267,8 @@ AncestorSourceList = Union[Tuple[AncestorSource], NoneSrcType]
 
 # https://w3c.github.io/webappsec-csp/#directive-report-to
 class ReportToValue(DirectiveValueItem):
+    _pattern = TOKEN
+
     def __init__(self, value: str):
         value = str(value)
         if not TOKEN.fullmatch(value):
@@ -269,6 +281,8 @@ class ReportToValue(DirectiveValueItem):
 
 # https://w3c.github.io/webappsec-csp/#directive-report-uri
 class UriReference(DirectiveValueItem):
+    _pattern = URI_REFERENCE
+
     def __init__(self, value: str):
         value = str(value)
         if not URI_REFERENCE.fullmatch(value):
