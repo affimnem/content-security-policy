@@ -46,8 +46,8 @@ class AutoInstanceMixin:
         for name in cls._auto_instance_prop:
             prop_name = name.replace("-", "_").strip("'")
 
-            @property
             @classmethod
+            @property
             def factory(cls):
                 return cls(name)
 
