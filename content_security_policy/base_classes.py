@@ -34,7 +34,7 @@ class Directive(ABC, Generic[ValueType]):
         Return the complete value of the directive as a string
         :return:
         """
-        return VALUE_SEPARATOR.join(self.values)
+        return VALUE_SEPARATOR.join(str(val) for val in self.values)
 
     @property
     def values(self) -> Tuple[ValueType]:
@@ -93,6 +93,11 @@ class Policy:
     @property
     def directives(self):
         return self._directives
+
+    def __str__(self):
+        return f";{VALUE_SEPARATOR}".join(
+            str(directive) for directive in self.directives
+        )
 
     def __and__(self, other: Policy) -> PolicySet:
         raise NotImplemented
