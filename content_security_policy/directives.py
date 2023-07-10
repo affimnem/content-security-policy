@@ -7,8 +7,7 @@ from typing import Type, Union
 
 from content_security_policy.base_classes import (
     Directive,
-    FetchDirective,
-    SelfType,
+    SourceListDirective,
     SingleValueDirective,
 )
 from content_security_policy.exceptions import BadDirectiveValue, NoSuchDirective
@@ -26,63 +25,63 @@ from content_security_policy.values import (
 
 
 # Fetch Directives
-class ChildSrc(FetchDirective):
+class ChildSrc(SourceListDirective):
     name = "child-src"
 
 
-class ConnectSrc(FetchDirective):
+class ConnectSrc(SourceListDirective):
     name = "connect-src"
 
 
-class DefaultSrc(FetchDirective):
+class DefaultSrc(SourceListDirective):
     name = "default-src"
 
 
-class FontSrc(FetchDirective):
+class FontSrc(SourceListDirective):
     name = "font-src"
 
 
-class FrameSrc(FetchDirective):
+class FrameSrc(SourceListDirective):
     name = "frame-src"
 
 
-class ImgSrc(FetchDirective):
+class ImgSrc(SourceListDirective):
     name = "img-src"
 
 
-class ManifestSrc(FetchDirective):
+class ManifestSrc(SourceListDirective):
     name = "manifest-src"
 
 
-class MediaSrc(FetchDirective):
+class MediaSrc(SourceListDirective):
     name = "media-src"
 
 
-class ObjectSrc(FetchDirective):
+class ObjectSrc(SourceListDirective):
     name = "object-src"
 
 
-class ScriptSrc(FetchDirective):
+class ScriptSrc(SourceListDirective):
     name = "script-src"
 
 
-class ScriptSrcElem(FetchDirective):
+class ScriptSrcElem(SourceListDirective):
     name = "script-src-elem"
 
 
-class ScriptSrcAttr(FetchDirective):
+class ScriptSrcAttr(SourceListDirective):
     name = "script-src-attr"
 
 
-class StyleSrc(FetchDirective):
+class StyleSrc(SourceListDirective):
     name = "style-src"
 
 
-class StyleSrcElem(FetchDirective):
+class StyleSrcElem(SourceListDirective):
     name = "style-src-elem"
 
 
-class StyleSrcAttr(FetchDirective):
+class StyleSrcAttr(SourceListDirective):
     name = "style-src-attr"
 
 
@@ -91,12 +90,12 @@ class Webrtc(SingleValueDirective[SourceList]):
     name = "webrtc"
 
 
-class WorkerSrc(Directive[SourceList]):
+class WorkerSrc(SourceListDirective[SourceList]):
     name = "worker-src"
 
 
 # Document directives
-class BaseUri(Directive[SourceList]):
+class BaseUri(SourceListDirective[SourceList]):
     name = "base-uri"
 
 
@@ -105,7 +104,7 @@ class Sandbox(Directive[SandboxValue]):
 
 
 # Navigation directives
-class FormAction(Directive[SourceList]):
+class FormAction(SourceListDirective[SourceList]):
     name = "form-action"
 
 

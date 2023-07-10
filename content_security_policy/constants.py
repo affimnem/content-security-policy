@@ -31,6 +31,13 @@ DIRECTIVE_NAMES = (
     + OTHER_DIRECTIVE_NAMES
 )
 
+# All these directives have a serialized-source-list as value
+SOURCE_LIST_DIRECTIVES = FETCH_DIRECTIVE_NAMES + (
+    "worker-src",
+    "form-action",
+    "base-uri",
+)
+
 
 class HeaderNames(StrEnum):
     content_security_policy = "Content-Security-Policy"

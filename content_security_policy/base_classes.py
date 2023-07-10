@@ -1,10 +1,15 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Type, TypeVar, Tuple, Generic
+from typing import Type, TypeVar, Tuple, Generic, Union
 
 from content_security_policy.constants import CSPLevels, VALUE_SEPARATOR
 from content_security_policy.exceptions import BadPolicy, BadSourceList
-from content_security_policy.values import SourceExpression, SourceList, NoneSrc
+from content_security_policy.values import (
+    SourceExpression,
+    SourceList,
+    NoneSrc,
+    NoneSrcType,
+)
 
 SelfType = TypeVar("SelfType", bound="Directive")
 ValueType = TypeVar("ValueType")
@@ -65,8 +70,10 @@ class SingleValueDirective(Directive[ValueType], ABC, Generic[ValueType]):
         super().__init__(value)
 
 
-class FetchDirective(Directive[SourceList], ABC):
-    def __init__(self, *sources: SourceExpression):
+# This is not called FetchDirective because not all directives accepting a Source List are categorised as
+# Fetch Directives by the spec (worker-src, base-uri, form-action)
+class SourceListDirective(Directive[SourceList], ABC):
+    def __init__(self, *sources: Union[SourceExpression, NoneSrcType]):
         if len(sources) > 1 and any(src == NoneSrc for src in sources):
             raise BadSourceList(
                 f"{NoneSrc} may not be combined with other source expressions."
@@ -74,11 +81,6 @@ class FetchDirective(Directive[SourceList], ABC):
         super().__init__(*sources)
 
     def __add__(self: SelfType, other: SourceExpression) -> SelfType:
-        if self.values and other == NoneSrc:
-            raise BadSourceList(
-                f"{NoneSrc} may not be combined with other source expressions."
-            )
-
         return type(self)(*self.values, other)
 
 
