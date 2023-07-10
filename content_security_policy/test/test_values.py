@@ -16,6 +16,8 @@ class KeywordSourceAttributes(TestCase):
                     self.fail(
                         f"{KeywordSource.__name__}.{attr_name} is not an instance of {KeywordSource}"
                     )
+                else:
+                    self.assertEqual(str(getattr(KeywordSource, attr_name)), kw_src)
 
 
 class NoneSourceStr(TestCase):
