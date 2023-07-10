@@ -2,6 +2,10 @@ class BadCsp(Exception):
     ...
 
 
+class NoSuchDirective(BadCsp):
+    ...
+
+
 class BadDirectiveValue(BadCsp):
     ...
 
@@ -10,11 +14,11 @@ class BadSourceExpression(BadDirectiveValue):
     ...
 
 
-class BadSourceList(BadDirectiveValue):
+class BadDirective(BadCsp):
     ...
 
 
-class BadDirective(BadCsp):
+class BadSourceList(BadDirective):
     ...
 
 
