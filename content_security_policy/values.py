@@ -8,6 +8,7 @@ __all__ = [
     "SourceExpression",
     "SourceList",
     "WebrtcValue",
+    "NoneSource",
     "AncestorSource",
     "AncestorSourceList",
     "SandboxValue",
@@ -178,17 +179,6 @@ class WebrtcValue(AutoInstanceMixin):
         return f"'{self._keyword}'"
 
 
-# 'self' is a keyword source expression, but it is also a possible value for frame-ancestors
-# Other KeywordSources are not valid values for frame-ancestors.
-class Self(SingleValueClass):
-    _value = SELF
-
-
-# https://w3c.github.io/webappsec-csp/#grammardef-ancestor-source-list
-AncestorSource = Union[SchemeSrc, HostSrc, Self]
-AncestorSourceList = Union[Tuple[AncestorSource] | NoneSource]
-
-
 # https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-elemet
 class SandboxToken(AutoInstanceMixin):
     # You can later get an instance of any value by accessing these as class attributes
@@ -228,6 +218,17 @@ class SandboxToken(AutoInstanceMixin):
 
 
 SandboxValue = Union[Tuple[SandboxToken], Literal[""]]
+
+
+# 'self' is a keyword source expression, but it is also a possible value for frame-ancestors, whereas other
+# KeywordSources are not valid values for frame-ancestors.
+class Self(SingleValueClass):
+    _value = SELF
+
+
+# https://w3c.github.io/webappsec-csp/#grammardef-ancestor-source-list
+AncestorSource = Union[SchemeSrc, HostSrc, Self]
+AncestorSourceList = Union[Tuple[AncestorSource] | NoneSource]
 
 
 # https://w3c.github.io/webappsec-csp/#directive-report-to

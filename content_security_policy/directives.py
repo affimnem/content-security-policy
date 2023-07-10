@@ -4,13 +4,19 @@ properly pick up on them.
 """
 from content_security_policy.base_classes import (
     Directive,
-    SingleValueDirective,
     FetchDirective,
+    SelfType,
+    SingleValueDirective,
+)
+from content_security_policy.exceptions import (
+    BadDirectiveValue,
 )
 from content_security_policy.values import (
     SourceList,
-    AncestorSourceList,
     SandboxValue,
+    AncestorSourceList,
+    AncestorSource,
+    NoneSource,
     ReportToValue,
     ReportUriValue,
 )
@@ -102,6 +108,21 @@ class FormAction(Directive[SourceList]):
 
 class FrameAncestors(Directive[AncestorSourceList]):
     name = "frame-ancestors"
+
+    def __init__(self, *sources: AncestorSource):
+        if len(sources) > 1 and any(src == NoneSource for src in sources):
+            raise BadDirectiveValue(
+                f"{NoneSource} may not be combined with other ancestor sources."
+            )
+        super().__init__(*sources)
+
+    def __add__(self: SelfType, other: AncestorSource) -> SelfType:
+        if self.values and other == NoneSource:
+            raise BadDirectiveValue(
+                f"{NoneSource} may not be combined with other ancestor sources."
+            )
+
+        return type(self)(*self.values, other)
 
 
 # Reporting directives
