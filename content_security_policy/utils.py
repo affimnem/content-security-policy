@@ -44,12 +44,12 @@ class AutoInstanceMixin:
 
     def __init_subclass__(cls, **kwargs):
         for name in cls._auto_instance_prop:
-            prop_name = name.replace("-", "_").strip("'")
+            prop_name = name.strip("'").replace("-", "_")
 
             @classmethod
             @property
-            def factory(cls):
-                return cls(name)
+            def factory(cls, sneak_me=name):
+                return cls(sneak_me)
 
             setattr(cls, prop_name, factory)
 
