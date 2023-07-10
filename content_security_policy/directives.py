@@ -90,12 +90,12 @@ class Webrtc(SingleValueDirective[SourceList]):
     name = "webrtc"
 
 
-class WorkerSrc(SourceListDirective[SourceList]):
+class WorkerSrc(SourceListDirective):
     name = "worker-src"
 
 
 # Document directives
-class BaseUri(SourceListDirective[SourceList]):
+class BaseUri(SourceListDirective):
     name = "base-uri"
 
 
@@ -104,7 +104,7 @@ class Sandbox(Directive[SandboxValue]):
 
 
 # Navigation directives
-class FormAction(SourceListDirective[SourceList]):
+class FormAction(SourceListDirective):
     name = "form-action"
 
 
