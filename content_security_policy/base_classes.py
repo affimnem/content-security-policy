@@ -60,7 +60,7 @@ class Directive(ABC, Generic[ValueType]):
         """
 
 
-class SingleValueDirective(Directive, ABC):
+class SingleValueDirective(Directive[ValueType], ABC, Generic[ValueType]):
     def __init__(self, value):
         super().__init__(value)
 
