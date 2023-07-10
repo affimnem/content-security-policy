@@ -8,7 +8,7 @@ __all__ = [
     "SourceExpression",
     "SourceList",
     "WebrtcValue",
-    "NoneSource",
+    "NoneSrc",
     "AncestorSource",
     "AncestorSourceList",
     "SandboxValue",
@@ -150,12 +150,12 @@ class KeywordSource(AutoInstanceMixin, SourceExpression):
 
 # According to spec, 'none'  is not a `source-expression`, but a special case of `serialized-source-list`
 # https://w3c.github.io/webappsec-csp/#grammardef-serialized-source-list
-class NoneSource(SingleValueClass):
+class NoneSrc(SingleValueClass):
     _value = NONE
 
 
 # https://w3c.github.io/webappsec-csp/#grammardef-serialized-source-list
-SourceList = Union[Tuple[SourceExpression] | NoneSource]
+SourceList = Union[Tuple[SourceExpression] | NoneSrc]
 
 
 class WebrtcValue(AutoInstanceMixin):
@@ -228,7 +228,7 @@ class Self(SingleValueClass):
 
 # https://w3c.github.io/webappsec-csp/#grammardef-ancestor-source-list
 AncestorSource = Union[SchemeSrc, HostSrc, Self]
-AncestorSourceList = Union[Tuple[AncestorSource] | NoneSource]
+AncestorSourceList = Union[Tuple[AncestorSource] | NoneSrc]
 
 
 # https://w3c.github.io/webappsec-csp/#directive-report-to

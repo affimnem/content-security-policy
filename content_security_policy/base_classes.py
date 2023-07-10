@@ -4,7 +4,7 @@ from typing import Type, TypeVar, Tuple, Generic
 
 from content_security_policy.constants import CSPLevels, VALUE_SEPARATOR
 from content_security_policy.exceptions import BadPolicy, BadSourceList
-from content_security_policy.values import SourceExpression, SourceList, NoneSource
+from content_security_policy.values import SourceExpression, SourceList, NoneSrc
 
 SelfType = TypeVar("SelfType", bound="Directive")
 ValueType = TypeVar("ValueType")
@@ -67,16 +67,16 @@ class SingleValueDirective(Directive, ABC):
 
 class FetchDirective(Directive[SourceList], ABC):
     def __init__(self, *sources: SourceExpression):
-        if len(sources) > 1 and any(src == NoneSource for src in sources):
+        if len(sources) > 1 and any(src == NoneSrc for src in sources):
             raise BadSourceList(
-                f"{NoneSource} may not be combined with other source expressions."
+                f"{NoneSrc} may not be combined with other source expressions."
             )
         super().__init__(*sources)
 
     def __add__(self: SelfType, other: SourceExpression) -> SelfType:
-        if self.values and other == NoneSource:
+        if self.values and other == NoneSrc:
             raise BadSourceList(
-                f"{NoneSource} may not be combined with other source expressions."
+                f"{NoneSrc} may not be combined with other source expressions."
             )
 
         return type(self)(*self.values, other)

@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from content_security_policy.values import KeywordSource, NoneSource
+from content_security_policy.values import KeywordSource, NoneSrc
 from content_security_policy.constants import KEYWORD_SOURCES, NONE
 from content_security_policy.utils import kebab_to_snake
 
@@ -20,7 +20,7 @@ class KeywordSourceAttributes(TestCase):
 
 class NoneSourceStr(TestCase):
     def test_instance_str(self):
-        self.assertEquals(str(NoneSource()), NONE)
+        self.assertEquals(str(NoneSrc()), NONE)
 
     def test_class_str(self):
-        self.assertEquals(str(NoneSource), NONE)
+        self.assertEquals(str(NoneSrc), NONE)

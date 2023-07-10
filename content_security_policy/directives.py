@@ -16,7 +16,7 @@ from content_security_policy.values import (
     SandboxValue,
     AncestorSourceList,
     AncestorSource,
-    NoneSource,
+    NoneSrc,
     ReportToValue,
     ReportUriValue,
 )
@@ -110,16 +110,16 @@ class FrameAncestors(Directive[AncestorSourceList]):
     name = "frame-ancestors"
 
     def __init__(self, *sources: AncestorSource):
-        if len(sources) > 1 and any(src == NoneSource for src in sources):
+        if len(sources) > 1 and any(src == NoneSrc for src in sources):
             raise BadDirectiveValue(
-                f"{NoneSource} may not be combined with other ancestor sources."
+                f"{NoneSrc} may not be combined with other ancestor sources."
             )
         super().__init__(*sources)
 
     def __add__(self: SelfType, other: AncestorSource) -> SelfType:
-        if self.values and other == NoneSource:
+        if self.values and other == NoneSrc:
             raise BadDirectiveValue(
-                f"{NoneSource} may not be combined with other ancestor sources."
+                f"{NoneSrc} may not be combined with other ancestor sources."
             )
 
         return type(self)(*self.values, other)
