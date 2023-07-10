@@ -2,21 +2,24 @@
 Actual directives, I would have loved to generate these classes dynamically, but then autocompletion tools won't
 properly pick up on them.
 """
+from functools import cache
+from typing import Type, Union
+
 from content_security_policy.base_classes import (
     Directive,
     FetchDirective,
     SelfType,
     SingleValueDirective,
 )
-from content_security_policy.exceptions import (
-    BadDirectiveValue,
-)
+from content_security_policy.exceptions import BadDirectiveValue, NoSuchDirective
+from content_security_policy.utils import kebab_to_pascal
 from content_security_policy.values import (
     SourceList,
     SandboxValue,
     AncestorSourceList,
     AncestorSource,
     NoneSrc,
+    NoneSrcType,
     ReportToValue,
     ReportUriValue,
 )
@@ -132,3 +135,17 @@ class ReportUri(Directive[ReportUriValue]):
 
 class ReportTo(SingleValueDirective[ReportToValue]):
     name = "report-to"
+
+
+@cache
+def directive_by_name(directive_name: str) -> Type[Directive]:
+    """
+    Get class for directive by its real name.
+    :param directive_name: real name of the directive, e.g. "script-src".
+    :return: Class for the directive.
+    """
+    class_name = kebab_to_pascal(directive_name)
+    try:
+        return getattr(__import__(__name__), class_name)
+    except AttributeError:
+        raise NoSuchDirective(f"Can not find class for directive name {directive_name}")
