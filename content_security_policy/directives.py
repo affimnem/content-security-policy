@@ -2,6 +2,33 @@
 Actual directives, I would have loved to generate these classes dynamically, but then autocompletion tools won't
 properly pick up on them.
 """
+__all__ = [
+    "ChildSrc",
+    "ConnectSrc",
+    "DefaultSrc",
+    "FontSrc",
+    "FrameSrc",
+    "ImgSrc",
+    "ManifestSrc",
+    "MediaSrc",
+    "ObjectSrc",
+    "ScriptSrc",
+    "ScriptSrcElem",
+    "ScriptSrcAttr",
+    "StyleSrc",
+    "StyleSrcElem",
+    "StyleSrcAttr",
+    "BaseUri",
+    "Sandbox",
+    "FormAction",
+    "FrameAncestors",
+    "ReportUri",
+    "ReportTo",
+    "Webrtc",
+    "WorkerSrc",
+    "directive_by_name",
+]
+
 from functools import cache
 from typing import Type, Union
 
