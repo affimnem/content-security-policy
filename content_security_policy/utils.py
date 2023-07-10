@@ -1,3 +1,5 @@
+from abc import ABCMeta
+
 import string
 from typing import Iterable
 
@@ -10,7 +12,7 @@ def kebab_to_snake(text: str) -> str:
     return "_".join(text.split("-"))
 
 
-class StrOnClassMeta(type):
+class StrOnClassMeta(ABCMeta):
     _value: str
 
     def __str__(cls):

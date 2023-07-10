@@ -18,7 +18,9 @@ __all__ = [
     "ReportUriValue",
 ]
 
+from abc import ABC
 from enum import StrEnum
+import re
 from typing import Optional, Tuple, Union, cast, Literal, Type
 
 from content_security_policy.constants import (
@@ -43,7 +45,22 @@ from content_security_policy.patterns import (
 from content_security_policy.utils import SingleValueClass, AutoInstanceMixin
 
 
-class SourceExpression:
+class DirectiveValueItem(ABC):
+    """
+    Base class for "items" in directive values. To clarify the distinction from a directive value, consider:
+    script-src 'self' http://example.com
+    The value of this script-src directive is "'self' http://example.com", whereas "'self'" and "http://example.com"
+    are the "items" of the value.
+    The two are not mutually exclusive. Some "items" may also be valid values by themselves.
+    """
+
+    # Pattern used to identify these values
+    _pattern: re.Pattern
+    # String from which the value was created
+    _parsed_string: Optional[str]
+
+
+class SourceExpression(DirectiveValueItem):
     ...
 
 
@@ -151,7 +168,7 @@ class KeywordSource(AutoInstanceMixin, SourceExpression):
 
 # According to spec, 'none'  is not a `source-expression`, but a special case of `serialized-source-list`
 # https://w3c.github.io/webappsec-csp/#grammardef-serialized-source-list
-class NoneSrc(SingleValueClass):
+class NoneSrc(SingleValueClass, DirectiveValueItem):
     _value = NONE
 
 
@@ -162,7 +179,7 @@ NoneSrcType = Union[NoneSrc, Type[NoneSrc]]
 SourceList = Union[Tuple[SourceExpression], NoneSrcType]
 
 
-class WebrtcValue(AutoInstanceMixin):
+class WebrtcValue(AutoInstanceMixin, DirectiveValueItem):
     # You can later get an instance of any value by accessing these as class attributes
     # They are spelled out explicitly here so type hints work
     allow = cast("WebrtcValue", "'allow'")
@@ -184,7 +201,7 @@ class WebrtcValue(AutoInstanceMixin):
 
 
 # https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-elemet
-class SandboxToken(AutoInstanceMixin):
+class SandboxToken(AutoInstanceMixin, DirectiveValueItem):
     # You can later get an instance of any value by accessing these as class attributes
     # They are spelled out explicitly here so type hints work
     allow_downloads = cast("SandboxToken", "allow-downloads")
@@ -226,7 +243,7 @@ SandboxValue = Union[Tuple[SandboxToken], Literal[""]]
 
 # 'self' is a keyword source expression, but it is also a possible value for frame-ancestors, whereas other
 # KeywordSources are not valid values for frame-ancestors.
-class SelfSrc(SingleValueClass):
+class SelfSrc(SingleValueClass, DirectiveValueItem):
     _value = SELF
 
 
@@ -239,7 +256,7 @@ AncestorSourceList = Union[Tuple[AncestorSource], NoneSrcType]
 
 
 # https://w3c.github.io/webappsec-csp/#directive-report-to
-class ReportToValue:
+class ReportToValue(DirectiveValueItem):
     def __init__(self, value: str):
         value = str(value)
         if not TOKEN.fullmatch(value):
@@ -251,7 +268,7 @@ class ReportToValue:
 
 
 # https://w3c.github.io/webappsec-csp/#directive-report-uri
-class UriReference:
+class UriReference(DirectiveValueItem):
     def __init__(self, value: str):
         value = str(value)
         if not URI_REFERENCE.fullmatch(value):
