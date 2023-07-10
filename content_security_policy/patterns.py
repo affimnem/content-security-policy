@@ -31,40 +31,20 @@ TOKEN = cast(re.Pattern, f"({TOKEN_CHAR})+")
 # https://w3c.github.io/webappsec-csp/#grammardef-base64-value
 BASE64_VALUE = cast(re.Pattern, rf"({ALPHA}|{DIGIT}|[+\/\-_]){{2, 0}}={{0, 2}}")
 
-# https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
+# https://datatracker.ietf.org/doc/html/rfc3986#appendix-A
 UNRESERVED = f"({ALPHA}|{DIGIT}|[-._~])"
 HEXDIG = "[0-9a-fA-F]"
 PCT_ENCODED = f"%{HEXDIG}{HEXDIG}"
-# Deviating from rfc3986 here, since CSP explicitly excludes ";" and ","
-# https://w3c.github.io/webappsec-csp/#grammardef-path-part
+# Deviating from rfc3986 here, since CSP explicitly excludes ";" and "," from ALL directive values:
+# https://w3c.github.io/webappsec-csp/#framework-directives
 SUB_DELIMS = "[!$&'()*+=]"
 PCHAR = f"({UNRESERVED}|{PCT_ENCODED}|{SUB_DELIMS}|@|:)"
 SEGMENT = f"{PCHAR}*"
 SEGMENT_NZ = f"{PCHAR}+"  # Non-Zero
 PATH_ABSOLUTE = f"/({SEGMENT_NZ}(/{SEGMENT})*)?"
-
-# https://datatracker.ietf.org/doc/html/rfc3986#section-3.1
 SCHEME = cast(re.Pattern, rf"{ALPHA}({ALPHA}|{DIGIT}|[+-.])*")
-HOST_CHAR = f"({ALPHA}|{DIGIT}|-)"
-HOST_PART = rf"(\*|(\*\.)?{HOST_CHAR}+(\.{HOST_CHAR}+))"
-PORT_PART = rf"(\*|{DIGIT}+)"
-HOST_SOURCE = cast(
-    re.Pattern, f"({SCHEME}://)?{HOST_PART}(:{PORT_PART})?{PATH_ABSOLUTE}?"
-)
-
-# https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
-KEYWORD_SOURCE = cast(re.Pattern, "|".join(KEYWORD_SOURCES))
-
-# https://w3c.github.io/webappsec-csp/#directive-webrtc
-WEBRTC_VALUE = cast(re.Pattern, "|".join(WEBRTC_VALUES))
-
-# https://w3c.github.io/webappsec-csp/#directive-sandbox
-SANDBOX_VALUE = cast(re.Pattern, "|".join(SANDBOX_VALUES))
-
-# https://datatracker.ietf.org/doc/html/rfc3986#appendix-A
 DEC_OCTET = f"({DIGIT})|([1-9]{DIGIT})|(1{DIGIT}{{2}})|(2[0-4]{DIGIT})|(25[0-5])"
 IP_V4_ADDRESS = f"{DEC_OCTET}.{DEC_OCTET}.{DEC_OCTET}.{DEC_OCTET}"
-
 H16 = f"{HEXDIG}{{1,4}}"
 LS_32 = f"({H16}:{H16})|({IP_V4_ADDRESS})"
 IP_V6_ADDRESS = (
@@ -81,7 +61,6 @@ IP_V6_ADDRESS = (
 # IP_V_FUTURE = # By the time  this is relevant, I will be dead
 IP_LITERAL = rf"\[{IP_V6_ADDRESS}\]"  # Fixme when I am dead: f"[({IP_V6_ADDRESS})|({IP_V_FUTURE})]"
 REG_NAME = f"({UNRESERVED}|{PCT_ENCODED}|{SUB_DELIMS})*"
-
 HOST = f"({IP_LITERAL})|({IP_V4_ADDRESS})|({REG_NAME})"
 PORT = f"({DIGIT})*"
 USERINFO = f"({UNRESERVED}|{PCT_ENCODED}|{SUB_DELIMS}|:)*"
@@ -93,14 +72,28 @@ PATH_ROOTLESS = f"{SEGMENT_NZ}(/{SEGMENT})*"
 SEGMENT_NZ_NC = f"({UNRESERVED}|{PCT_ENCODED}|{SUB_DELIMS}|@)+"
 PATH_NOSCHEME = f"{SEGMENT_NZ_NC}(/{SEGMENT})*"
 HIER_PART = f"((//{AUTHORITY}{PATH_AB_EMPTY})|{PATH_ABSOLUTE}|{PATH_ROOTLESS})?"
-
 URI = rf"{SCHEME}:{HIER_PART}(\?{QUERY})?(#{FRAGMENT})"
-
 RELATIVE_PART = f"((//{AUTHORITY}{PATH_AB_EMPTY})|({PATH_ABSOLUTE})|({PATH_NOSCHEME}))?"
 RELATIVE_REF = rf"({RELATIVE_PART})(\?{QUERY})?(#{FRAGMENT})?"
-
-# https://datatracker.ietf.org/doc/html/rfc3986#section-4.1
 URI_REFERENCE = cast(re.Pattern, f"({URI})|({RELATIVE_REF})")
+
+# https://w3c.github.io/webappsec-csp/#grammardef-host-source
+SCHEME_PART = SCHEME
+HOST_CHAR = f"({ALPHA}|{DIGIT}|-)"
+HOST_PART = rf"(\*|(\*\.)?{HOST_CHAR}+(\.{HOST_CHAR}+))"
+PORT_PART = rf"(\*|{DIGIT}+)"
+PATH_PART = PATH_ABSOLUTE
+HOST_SOURCE = cast(
+    re.Pattern, f"({SCHEME_PART}://)?{HOST_PART}(:{PORT_PART})?{PATH_PART}?"
+)
+# https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
+KEYWORD_SOURCE = cast(re.Pattern, "|".join(KEYWORD_SOURCES))
+
+# https://w3c.github.io/webappsec-csp/#directive-webrtc
+WEBRTC_VALUE = cast(re.Pattern, "|".join(WEBRTC_VALUES))
+
+# https://w3c.github.io/webappsec-csp/#directive-sandbox
+SANDBOX_VALUE = cast(re.Pattern, "|".join(SANDBOX_VALUES))
 
 # workaround for the "want to reuse patters but also want to precompile them"-problem
 for name in __all__:
