@@ -8,6 +8,6 @@ class SimpleExample(TestCase):
         policy = Policy(
             DefaultSrc(KeywordSource.self), FrameAncestors(SelfSrc), ObjectSrc(NoneSrc)
         )
-        self.assertEquals(
+        self.assertEqual(
             str(policy), "default-src 'self'; frame-ancestors 'self'; object-src 'none'"
         )
