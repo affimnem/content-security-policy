@@ -17,12 +17,12 @@ class KeywordSourceAttributes(TestCase):
                         f"{KeywordSource.__name__}.{attr_name} is not an instance of {KeywordSource}"
                     )
                 else:
-                    self.assertEqual(str(getattr(KeywordSource, attr_name)), kw_src)
+                    self.assertEqual(kw_src, str(getattr(KeywordSource, attr_name)))
 
 
 class NoneSourceStr(TestCase):
     def test_instance_str(self):
-        self.assertEqual(str(NoneSrc()), NONE)
+        self.assertEqual(NONE, str(NoneSrc()))
 
     def test_class_str(self):
-        self.assertEqual(str(NoneSrc), NONE)
+        self.assertEqual(NONE, str(NoneSrc))
