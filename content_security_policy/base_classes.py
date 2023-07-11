@@ -21,7 +21,7 @@ class ValueItem(ABC):
     """
 
     # Pattern used to identify these values when parsing
-    _pattern: re.Pattern
+    pattern: re.Pattern
     # hash as string
     _value: Optional[str]
 
@@ -123,7 +123,7 @@ class SingleValueDirective(Directive[ValueType], ABC, Generic[ValueType]):
     """
 
     # __init__ still allows for multiple values to be passed to enable lenient parsing.
-    # TODO: When implementing is_valid, do not forget to check whether there is more than one hash!
+    # TODO: When implementing is_valid, do not forget to check whether there is more than one value!
     def __init__(self, *values, **kwargs):
         super().__init__(*values, **kwargs)
 

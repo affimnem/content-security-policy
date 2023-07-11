@@ -65,7 +65,7 @@ class SourceExpression(ValueItem, ABC):
 
 # https://w3c.github.io/webappsec-csp/#grammardef-nonce-source
 class NonceSrc(SourceExpression):
-    _pattern = NONCE_SOURCE
+    pattern = NONCE_SOURCE
 
     def __init__(self, nonce: str, _value: Optional[str] = None):
         if _value is not None:
@@ -83,7 +83,7 @@ class NonceSrc(SourceExpression):
 
 # https://w3c.github.io/webappsec-csp/#grammardef-nonce-source
 class HashSrc(SourceExpression):
-    _pattern = HASH_SOURCE
+    pattern = HASH_SOURCE
 
     def __init__(
         self, hash: str, algo: Optional[str] = None, _value: Optional[str] = None
@@ -111,7 +111,7 @@ class HashSrc(SourceExpression):
 
 # https://w3c.github.io/webappsec-csp/#grammardef-scheme-source
 class SchemeSrc(SourceExpression):
-    _pattern = SCHEME_SOURCE
+    pattern = SCHEME_SOURCE
 
     def __init__(self, scheme: str, _value: Optional[str] = None):
         if _value is not None:
@@ -128,7 +128,7 @@ class SchemeSrc(SourceExpression):
 
 # https://w3c.github.io/webappsec-csp/#grammardef-host-source
 class HostSrc(SourceExpression):
-    _pattern = HOST_SOURCE
+    pattern = HOST_SOURCE
 
     def __init__(self, host: str, _value: Optional[str] = None):
         if _value is not None:
@@ -142,7 +142,7 @@ class HostSrc(SourceExpression):
 
 # https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
 class KeywordSource(AutoInstanceMixin, SourceExpression):
-    _pattern = KEYWORD_SOURCE_RE
+    pattern = KEYWORD_SOURCE_RE
 
     # You can later get an instance of any hash source by accessing these as class attributes
     # They are spelled out explicitly here so type hints work
@@ -185,7 +185,7 @@ class SingleValueItem(ClassAsValue, ValueItem, ABC):
 # According to spec, 'none'  is not a `source-expression`, but a special case of `serialized-source-list`
 # https://w3c.github.io/webappsec-csp/#grammardef-serialized-source-list
 class NoneSrc(SingleValueItem):
-    _pattern = NONE_SOURCE
+    pattern = NONE_SOURCE
     _value = NONE
 
 
@@ -259,7 +259,7 @@ SandboxValue = Union[Tuple[SandboxToken], Literal[""]]
 # 'self' is a keyword source expression, but it is also a possible hash for frame-ancestors, whereas other
 # KeywordSources are not valid values for frame-ancestors.
 class SelfSrc(SingleValueItem):
-    _pattern = SELF_SOURCE
+    pattern = SELF_SOURCE
     _value = SELF
 
 
@@ -273,7 +273,7 @@ AncestorSourceList = Union[Tuple[AncestorSource], NoneSrcType]
 
 # https://w3c.github.io/webappsec-csp/#directive-report-to
 class ReportToValue(ValueItem):
-    _pattern = TOKEN
+    pattern = TOKEN
 
     def __init__(self, value: str, _value: Optional[str] = None):
         if _value is not None:
@@ -286,7 +286,7 @@ class ReportToValue(ValueItem):
 
 # https://w3c.github.io/webappsec-csp/#directive-report-uri
 class UriReference(ValueItem):
-    _pattern = URI_REFERENCE
+    pattern = URI_REFERENCE
 
     def __init__(self, value: str, _value: Optional[str] = None):
         if _value is not None:
@@ -301,4 +301,4 @@ ReportUriValue = Tuple[UriReference]
 
 
 class UnrecognizedValueItem(ValueItem):
-    _pattern = NOT_SEPARATOR
+    pattern = NOT_SEPARATOR
