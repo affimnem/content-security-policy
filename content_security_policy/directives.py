@@ -48,97 +48,98 @@ from content_security_policy.values import (
     NoneSrcType,
     ReportToValue,
     ReportUriValue,
+    UnrecognizedValueItem,
 )
 
 
 # Fetch Directives
 class ChildSrc(SourceListDirective):
-    name = "child-src"
+    _name = "child-src"
 
 
 class ConnectSrc(SourceListDirective):
-    name = "connect-src"
+    _name = "connect-src"
 
 
 class DefaultSrc(SourceListDirective):
-    name = "default-src"
+    _name = "default-src"
 
 
 class FontSrc(SourceListDirective):
-    name = "font-src"
+    _name = "font-src"
 
 
 class FrameSrc(SourceListDirective):
-    name = "frame-src"
+    _name = "frame-src"
 
 
 class ImgSrc(SourceListDirective):
-    name = "img-src"
+    _name = "img-src"
 
 
 class ManifestSrc(SourceListDirective):
-    name = "manifest-src"
+    _name = "manifest-src"
 
 
 class MediaSrc(SourceListDirective):
-    name = "media-src"
+    _name = "media-src"
 
 
 class ObjectSrc(SourceListDirective):
-    name = "object-src"
+    _name = "object-src"
 
 
 class ScriptSrc(SourceListDirective):
-    name = "script-src"
+    _name = "script-src"
 
 
 class ScriptSrcElem(SourceListDirective):
-    name = "script-src-elem"
+    _name = "script-src-elem"
 
 
 class ScriptSrcAttr(SourceListDirective):
-    name = "script-src-attr"
+    _name = "script-src-attr"
 
 
 class StyleSrc(SourceListDirective):
-    name = "style-src"
+    _name = "style-src"
 
 
 class StyleSrcElem(SourceListDirective):
-    name = "style-src-elem"
+    _name = "style-src-elem"
 
 
 class StyleSrcAttr(SourceListDirective):
-    name = "style-src-attr"
+    _name = "style-src-attr"
 
 
 # Other directives
 class Webrtc(SingleValueDirective[SourceList]):
-    name = "webrtc"
+    _name = "webrtc"
 
 
 class WorkerSrc(SourceListDirective):
-    name = "worker-src"
+    _name = "worker-src"
 
 
 # Document directives
 class BaseUri(SourceListDirective):
-    name = "base-uri"
+    _name = "base-uri"
 
 
 class Sandbox(Directive[SandboxValue]):
-    name = "sandbox"
+    _name = "sandbox"
 
 
 # Navigation directives
 class FormAction(SourceListDirective):
-    name = "form-action"
+    _name = "form-action"
 
 
 class FrameAncestors(Directive[AncestorSourceList]):
-    name = "frame-ancestors"
+    _name = "frame-ancestors"
 
-    def __init__(self, *sources: Union[AncestorSource, NoneSrcType]):
+    def __init__(self, *sources: Union[AncestorSource, NoneSrcType], **kwargs):
         """
         Create frame-ancestors from NoneSrc XOR an arbitrary number of AncestorSource.
         :param sources: Allowed frame ancestors.
@@ -147,27 +148,43 @@ class FrameAncestors(Directive[AncestorSourceList]):
             raise BadDirectiveValue(
                 f"{NoneSrc} may not be combined with other ancestor sources."
             )
-        super().__init__(*sources)
+        super().__init__(*sources, **kwargs)
 
 
 # Reporting directives
 class ReportUri(Directive[ReportUriValue]):
-    name = "report-uri"
+    _name = "report-uri"
 
 
 class ReportTo(SingleValueDirective[ReportToValue]):
-    name = "report-to"
+    _name = "report-to"
+
+
+class UnrecognizedDirective(Directive[UnrecognizedValueItem]):
+    """
+    A directive whose name is not recognized.
+    """
+
+    def __init__(self, name: str, *values):
+        self._name = name
+        super().__init__(*values, _name=name)
+
+    @property
+    def name(self) -> str:
+        return self._name
 
 
 @cache
 def directive_by_name(directive_name: str) -> Type[Directive]:
     """
-    Get class for directive by its real name.
-    :param directive_name: real name of the directive, e.g. "script-src".
+    Get class for directive by its real _name.
+    :param directive_name: real _name of the directive, e.g. "script-src".
     :return: Class for the directive.
     """
     class_name = kebab_to_pascal(directive_name)
     try:
         return getattr(__import__(__name__), class_name)
     except AttributeError:
-        raise NoSuchDirective(f"Can not find class for directive name {directive_name}")
+        raise NoSuchDirective(
+            f"Can not find class for directive _name {directive_name}"
+        )

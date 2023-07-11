@@ -1,8 +1,11 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
-from typing import Type, TypeVar, Tuple, Generic, Union
+from abc import ABC
+from typing import Type, TypeVar, Tuple, Generic, Union, Optional, Iterable
 
-from content_security_policy.constants import CSPLevels, VALUE_SEPARATOR
+from content_security_policy.constants import (
+    DEFAULT_VALUE_SEPARATOR,
+    DEFAULT_POLICY_SEPARATOR,
+)
 from content_security_policy.exceptions import BadPolicy, BadSourceList
 from content_security_policy.values import (
     SourceExpression,
@@ -17,24 +20,29 @@ ValueType = TypeVar("ValueType")
 
 class Directive(ABC, Generic[ValueType]):
     _value: ValueType
+    _name: Optional[str]
+    _separators: Optional[Tuple[str]]
 
-    def __init__(self, *values: ValueType):
+    def __init__(
+        self,
+        *values: ValueType,
+        _name: Optional[str] = None,
+        _separators: Optional[Iterable[str]] = None,
+    ):
         self._value = tuple(values)
+        self._separators = _separators or (
+            (DEFAULT_VALUE_SEPARATOR,) * len(self._value)
+        )
+
+        if _name:
+            self._name = _name
 
     @property
-    @abstractmethod
     def name(self) -> str:
         """
         Name of the directive.
         """
-
-    @property
-    def value(self) -> str:
-        """
-        Return the complete value of the directive as a string
-        :return:
-        """
-        return VALUE_SEPARATOR.join(str(val) for val in self.values)
+        return self._name
 
     @property
     def values(self) -> Tuple[ValueType]:
@@ -44,8 +52,28 @@ class Directive(ABC, Generic[ValueType]):
         """
         return self._value if isinstance(self._value, tuple) else (self._value,)
 
+    def _value_str_tokens(self):
+        value_it = iter(self.values)
+        yield str(next(value_it))
+        for sep in self._separators[1:]:
+            yield sep
+            yield str(next(value_it))
+
+    @property
+    def value(self) -> str:
+        """
+        Return the complete value of the directive as a string
+        :return:
+        """
+        return "".join(self._value_str_tokens())
+
+    def _str_tokens(self):
+        yield self.name
+        yield self._separators[0]
+        yield from self._value_str_tokens()
+
     def __str__(self):
-        return f"{self.name}{VALUE_SEPARATOR}{self.value}"
+        return "".join(self._str_tokens())
 
     def __iter__(self):
         """
@@ -59,29 +87,34 @@ class Directive(ABC, Generic[ValueType]):
     def __sub__(self: SelfType, other: ValueType) -> SelfType:
         raise NotImplemented
 
-    def get_effective_directive(self: SelfType) -> SelfType:
-        """
-        Return a directive without any values that a browser with level `level` would ignore.
-        """
-
 
 class SingleValueDirective(Directive[ValueType], ABC, Generic[ValueType]):
-    def __init__(self, value):
-        super().__init__(value)
+    """
+    A directive that only supports one value item.
+    """
+
+    # __init__ still allows for multiple values to be passed to enable lenient parsing.
+    # TODO: When implementing is_valid, do not forget to check whether there is more than one value!
+    def __init__(self, *values, **kwargs):
+        super().__init__(*values, **kwargs)
 
 
 # This is not called FetchDirective because not all directives accepting a Source List are categorised as
 # Fetch Directives by the spec (worker-src, base-uri, form-action)
 class SourceListDirective(Directive[SourceList], ABC):
-    def __init__(self, *sources: Union[SourceExpression, NoneSrcType]):
+    """
+    A directive whose value is a
+    """
+
+    def __init__(self, *sources: Union[SourceExpression, NoneSrcType], **kwargs):
         if len(sources) > 1 and any(src == NoneSrc for src in sources):
             raise BadSourceList(
                 f"{NoneSrc} may not be combined with other source expressions."
             )
-        super().__init__(*sources)
+        super().__init__(*sources, **kwargs)
 
     def __add__(self: SelfType, other: SourceExpression) -> SelfType:
-        return type(self)(*self.values, other)
+        return type(self)(*self.values, other, name=self._name)
 
 
 class Policy:
@@ -95,7 +128,7 @@ class Policy:
         return self._directives
 
     def __str__(self):
-        return f";{VALUE_SEPARATOR}".join(
+        return f"{DEFAULT_POLICY_SEPARATOR}".join(
             str(directive) for directive in self.directives
         )
 
@@ -130,21 +163,7 @@ class Policy:
         """
         yield from self._directives
 
-    def get_effective_policy(self, level: CSPLevels = CSPLevels.level_3) -> Policy:
-        """
-        Return a policy without any directives or directive values that a browser with level `level` would ignore.
-        """
-        raise NotImplemented
-
 
 class PolicySet:
     def __init__(self, *policies):
-        raise NotImplemented
-
-    def get_effective_policy_set(
-        self, level: CSPLevels = CSPLevels.level_3
-    ) -> PolicySet:
-        """
-        Return a policy set without any directives or directive values that a browser with level `level` would ignore.
-        """
         raise NotImplemented

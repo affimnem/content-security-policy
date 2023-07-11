@@ -1,4 +1,6 @@
 __all__ = [
+    "ValueItem",
+    "ValueItemType",
     "NonceSrc",
     "HashSrc",
     "SchemeSrc",
@@ -8,13 +10,16 @@ __all__ = [
     "SourceList",
     "WebrtcValue",
     "NoneSrc",
+    "NoneSrcType",
     "SelfSrc",
+    "SelfSrcType",
     "AncestorSource",
     "AncestorSourceList",
     "SandboxValue",
     "ReportToValue",
     "UriReference",
     "ReportUriValue",
+    "UnrecognizedValueItem",
 ]
 
 from abc import ABC
@@ -42,6 +47,7 @@ from content_security_policy.patterns import (
     NONE_SOURCE,
     SELF_SOURCE,
     URI_REFERENCE,
+    NOT_SEPARATOR,
     # Appending _RE, so they are easier to distinguish from the constants
     KEYWORD_SOURCE as KEYWORD_SOURCE_RE,
     WEBRTC_VALUE as WEBRTC_VALUE_RE,
@@ -50,13 +56,13 @@ from content_security_policy.patterns import (
 from content_security_policy.utils import SingleValueClass, AutoInstanceMixin
 
 
-class DirectiveValueItem(ABC):
+class ValueItem(ABC):
     """
     Base class for "items" in directive values. To clarify the distinction from a directive value, consider:
     script-src 'self' http://example.com
     The value of this script-src directive is "'self' http://example.com", whereas "'self'" and "http://example.com"
     are the "items" of the value.
-    The two are not mutually exclusive. Some "items" may also be valid values by themselves.
+    The two are not mutually exclusive. Some items may also be valid values by themselves.
     """
 
     # Pattern used to identify these values when parsing
@@ -65,8 +71,14 @@ class DirectiveValueItem(ABC):
     _parsed_string: Optional[str]
 
 
-class SourceExpression(DirectiveValueItem, ABC):
-    ...
+# Some classes for directive values are valid value items themselves, use this to cover both in type hints
+ValueItemType = Union[ValueItem, Type[ValueItem]]
+
+
+class SourceExpression(ValueItem, ABC):
+    """
+    Base class for all source expressions.
+    """
 
 
 # https://w3c.github.io/webappsec-csp/#grammardef-nonce-source
@@ -176,7 +188,7 @@ class KeywordSource(AutoInstanceMixin, SourceExpression):
 
 # According to spec, 'none'  is not a `source-expression`, but a special case of `serialized-source-list`
 # https://w3c.github.io/webappsec-csp/#grammardef-serialized-source-list
-class NoneSrc(SingleValueClass, DirectiveValueItem):
+class NoneSrc(SingleValueClass, ValueItem):
     _pattern = NONE_SOURCE
     _value = NONE
 
@@ -188,7 +200,7 @@ NoneSrcType = Union[NoneSrc, Type[NoneSrc]]
 SourceList = Union[Tuple[SourceExpression], NoneSrcType]
 
 
-class WebrtcValue(AutoInstanceMixin, DirectiveValueItem):
+class WebrtcValue(AutoInstanceMixin, ValueItem):
     # You can later get an instance of any value by accessing these as class attributes
     # They are spelled out explicitly here so type hints work
     allow = cast("WebrtcValue", "'allow'")
@@ -210,7 +222,7 @@ class WebrtcValue(AutoInstanceMixin, DirectiveValueItem):
 
 
 # https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-elemet
-class SandboxToken(AutoInstanceMixin, DirectiveValueItem):
+class SandboxToken(AutoInstanceMixin, ValueItem):
     # You can later get an instance of any value by accessing these as class attributes
     # They are spelled out explicitly here so type hints work
     allow_downloads = cast("SandboxToken", "allow-downloads")
@@ -247,12 +259,13 @@ class SandboxToken(AutoInstanceMixin, DirectiveValueItem):
         return self._token
 
 
+# TODO: Unsure whether I like the Literal[""] here, need to revisit once I work on empty / non-empty directive-values
 SandboxValue = Union[Tuple[SandboxToken], Literal[""]]
 
 
 # 'self' is a keyword source expression, but it is also a possible value for frame-ancestors, whereas other
 # KeywordSources are not valid values for frame-ancestors.
-class SelfSrc(SingleValueClass, DirectiveValueItem):
+class SelfSrc(SingleValueClass, ValueItem):
     _pattern = SELF_SOURCE
     _value = SELF
 
@@ -266,7 +279,7 @@ AncestorSourceList = Union[Tuple[AncestorSource], NoneSrcType]
 
 
 # https://w3c.github.io/webappsec-csp/#directive-report-to
-class ReportToValue(DirectiveValueItem):
+class ReportToValue(ValueItem):
     _pattern = TOKEN
 
     def __init__(self, value: str):
@@ -280,7 +293,7 @@ class ReportToValue(DirectiveValueItem):
 
 
 # https://w3c.github.io/webappsec-csp/#directive-report-uri
-class UriReference(DirectiveValueItem):
+class UriReference(ValueItem):
     _pattern = URI_REFERENCE
 
     def __init__(self, value: str):
@@ -294,3 +307,7 @@ class UriReference(DirectiveValueItem):
 
 
 ReportUriValue = Tuple[UriReference]
+
+
+class UnrecognizedValueItem(ValueItem):
+    _pattern = NOT_SEPARATOR

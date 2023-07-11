@@ -12,6 +12,9 @@ __all__ = [
     "KEYWORD_SOURCE",
     "WEBRTC_VALUE",
     "SANDBOX_VALUE",
+    "ASCII_WHITESPACE",
+    "NOT_SEPARATOR",
+    "POLICY_SEPARATOR",
 ]
 # These expressions will be compiled with re.IGNORECASE
 __case_insensitive__ = {
@@ -119,6 +122,15 @@ WEBRTC_VALUE = cast(re.Pattern, "|".join(WEBRTC_VALUES))
 
 # https://w3c.github.io/webappsec-csp/#directive-sandbox
 SANDBOX_VALUE = cast(re.Pattern, "|".join(SANDBOX_VALUES))
+
+# https://w3c.github.io/webappsec-csp/#grammardef-optional-ascii-whitespace
+WHITESPACE_CHARS = "\t\n\x0c\r "
+ASCII_WHITESPACE = cast(re.Pattern, f"[{WHITESPACE_CHARS}]")
+
+POLICY_SEPARATOR = cast(re.Pattern, f"{ASCII_WHITESPACE}*;{ASCII_WHITESPACE}*")
+
+# Used for unrecognized directive names / value items
+NOT_SEPARATOR = cast(re.Pattern, f"[^{WHITESPACE_CHARS};,]*")
 
 # workaround for the "want to reuse patters but also want to precompile them"-problem
 for name in __all__:
