@@ -29,7 +29,7 @@ DIRECTIVE_NAMES = (
     + OTHER_DIRECTIVE_NAMES
 )
 
-# All these directives have a serialized-source-list as value
+# All these directives have a serialized-source-list as hash
 SOURCE_LIST_DIRECTIVES = FETCH_DIRECTIVE_NAMES + (
     "worker-src",
     "form-action",

@@ -3,6 +3,7 @@ Actual directives, I would have loved to generate these classes dynamically, but
 properly pick up on them.
 """
 __all__ = [
+    "SourceListDirective",
     "ChildSrc",
     "ConnectSrc",
     "DefaultSrc",
@@ -26,20 +27,27 @@ __all__ = [
     "ReportTo",
     "Webrtc",
     "WorkerSrc",
+    "UnrecognizedDirective",
     "directive_by_name",
 ]
 
+from abc import ABC
 from functools import cache
 from typing import Type, Union
 
 from content_security_policy.base_classes import (
+    SelfType,
     Directive,
-    SourceListDirective,
     SingleValueDirective,
 )
-from content_security_policy.exceptions import BadDirectiveValue, NoSuchDirective
+from content_security_policy.exceptions import (
+    BadDirectiveValue,
+    NoSuchDirective,
+    BadSourceList,
+)
 from content_security_policy.utils import kebab_to_pascal
 from content_security_policy.values import (
+    SourceExpression,
     SourceList,
     SandboxValue,
     AncestorSourceList,
@@ -50,6 +58,24 @@ from content_security_policy.values import (
     ReportUriValue,
     UnrecognizedValueItem,
 )
+
+
+# This is not called FetchDirective because not all directives accepting a Source List are categorised as
+# Fetch Directives by the spec (worker-src, base-uri, form-action)
+class SourceListDirective(Directive[SourceList], ABC):
+    """
+    A directive whose hash is a
+    """
+
+    def __init__(self, *sources: Union[SourceExpression, NoneSrcType], **kwargs):
+        if len(sources) > 1 and any(src == NoneSrc for src in sources):
+            raise BadSourceList(
+                f"{NoneSrc} may not be combined with other source expressions."
+            )
+        super().__init__(*sources, **kwargs)
+
+    def __add__(self: SelfType, other: SourceExpression) -> SelfType:
+        return type(self)(*self.values, other, name=self._name)
 
 
 # Fetch Directives

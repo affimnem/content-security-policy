@@ -1,25 +1,54 @@
 from __future__ import annotations
 from abc import ABC
-from typing import Type, TypeVar, Tuple, Generic, Union, Optional, Iterable
+import re
+from typing import Type, TypeVar, Tuple, Generic, Optional, Iterable, Union
 
 from content_security_policy.constants import (
     DEFAULT_VALUE_SEPARATOR,
     DEFAULT_POLICY_SEPARATOR,
 )
-from content_security_policy.exceptions import BadPolicy, BadSourceList
-from content_security_policy.values import (
-    SourceExpression,
-    SourceList,
-    NoneSrc,
-    NoneSrcType,
-)
+from content_security_policy.exceptions import BadPolicy
+from content_security_policy.utils import StrOnClassMeta
+
+
+class ValueItem(ABC):
+    """
+    Base class for "items" in directive values. To clarify the distinction from a directive hash, consider:
+    script-src 'self' http://example.com
+    The hash of this script-src directive is "'self' http://example.com", whereas "'self'" and "http://example.com"
+    are the "items" of the hash.
+    The two are not mutually exclusive. Some items may also be valid values by themselves.
+    """
+
+    # Pattern used to identify these values when parsing
+    _pattern: re.Pattern
+    # hash as string
+    _value: Optional[str]
+
+    def __init__(self, value: str):
+        self._value = value
+
+    def __str__(self):
+        return self._value
+
+
+class ClassAsValue(ValueItem, metaclass=StrOnClassMeta):
+    def __str__(self):
+        """
+        Calling str() on an instance will return the hash.
+        """
+        return self._value
+
+
+# Some classes for directive values are valid items themselves, use this to cover both in type hints
+ValueItemType = Union[ValueItem, Type[ValueItem]]
 
 SelfType = TypeVar("SelfType", bound="Directive")
-ValueType = TypeVar("ValueType")
+ValueType = TypeVar("ValueType", bound=ValueItemType)
 
 
 class Directive(ABC, Generic[ValueType]):
-    _value: ValueType
+    _value: Tuple[ValueType]
     _name: Optional[str]
     _separators: Optional[Tuple[str]]
 
@@ -62,7 +91,7 @@ class Directive(ABC, Generic[ValueType]):
     @property
     def value(self) -> str:
         """
-        Return the complete value of the directive as a string
+        Return the complete hash of the directive as a string
         :return:
         """
         return "".join(self._value_str_tokens())
@@ -90,31 +119,13 @@ class Directive(ABC, Generic[ValueType]):
 
 class SingleValueDirective(Directive[ValueType], ABC, Generic[ValueType]):
     """
-    A directive that only supports one value item.
+    A directive that only supports one hash item.
     """
 
     # __init__ still allows for multiple values to be passed to enable lenient parsing.
-    # TODO: When implementing is_valid, do not forget to check whether there is more than one value!
+    # TODO: When implementing is_valid, do not forget to check whether there is more than one hash!
     def __init__(self, *values, **kwargs):
         super().__init__(*values, **kwargs)
-
-
-# This is not called FetchDirective because not all directives accepting a Source List are categorised as
-# Fetch Directives by the spec (worker-src, base-uri, form-action)
-class SourceListDirective(Directive[SourceList], ABC):
-    """
-    A directive whose value is a
-    """
-
-    def __init__(self, *sources: Union[SourceExpression, NoneSrcType], **kwargs):
-        if len(sources) > 1 and any(src == NoneSrc for src in sources):
-            raise BadSourceList(
-                f"{NoneSrc} may not be combined with other source expressions."
-            )
-        super().__init__(*sources, **kwargs)
-
-    def __add__(self: SelfType, other: SourceExpression) -> SelfType:
-        return type(self)(*self.values, other, name=self._name)
 
 
 class Policy:

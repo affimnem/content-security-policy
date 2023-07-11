@@ -17,28 +17,9 @@ class StrOnClassMeta(ABCMeta):
 
     def __str__(cls):
         """
-        Calling str() on the CLASS will return the value.
+        Calling str() on the CLASS will return  _value.
         """
         return cls._value
-
-
-class SingleValueClass(metaclass=StrOnClassMeta):
-    _value: str
-    _instance = None
-
-    def __str__(self):
-        """
-        Calling str() on an instance will return the value.
-        """
-        return self._value
-
-    def __new__(class_, *args, **kwargs):
-        """
-        Effectively makes this a singleton.
-        """
-        if not isinstance(class_._instance, class_):
-            class_._instance = object.__new__(class_)
-        return class_._instance
 
 
 class AutoInstanceMixin:

@@ -1,12 +1,12 @@
-class BadCsp(Exception):
+class CSPError(Exception):
     ...
 
 
-class NoSuchDirective(BadCsp):
+class NoSuchDirective(CSPError):
     ...
 
 
-class BadDirectiveValue(BadCsp):
+class BadDirectiveValue(CSPError):
     ...
 
 
@@ -14,7 +14,7 @@ class BadSourceExpression(BadDirectiveValue):
     ...
 
 
-class BadDirective(BadCsp):
+class BadDirective(CSPError):
     ...
 
 
@@ -22,5 +22,9 @@ class BadSourceList(BadDirective):
     ...
 
 
-class BadPolicy(BadCsp):
+class BadPolicy(CSPError):
+    ...
+
+
+class ParsingError(CSPError):
     ...

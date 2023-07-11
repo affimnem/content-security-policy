@@ -14,6 +14,7 @@ __all__ = [
     "SANDBOX_VALUE",
     "ASCII_WHITESPACE",
     "NOT_SEPARATOR",
+    "VALUE_ITEM_SEPARATOR",
     "POLICY_SEPARATOR",
 ]
 # These expressions will be compiled with re.IGNORECASE
@@ -127,9 +128,10 @@ SANDBOX_VALUE = cast(re.Pattern, "|".join(SANDBOX_VALUES))
 WHITESPACE_CHARS = "\t\n\x0c\r "
 ASCII_WHITESPACE = cast(re.Pattern, f"[{WHITESPACE_CHARS}]")
 
+VALUE_ITEM_SEPARATOR = cast(re.Pattern, f"{ASCII_WHITESPACE}+")
 POLICY_SEPARATOR = cast(re.Pattern, f"{ASCII_WHITESPACE}*;{ASCII_WHITESPACE}*")
 
-# Used for unrecognized directive names / value items
+# Used for unrecognized directive names / hash items
 NOT_SEPARATOR = cast(re.Pattern, f"[^{WHITESPACE_CHARS};,]*")
 
 # workaround for the "want to reuse patters but also want to precompile them"-problem
