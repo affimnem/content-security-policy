@@ -82,7 +82,7 @@ class Directive(ABC, Generic[ValueType]):
             else ((DEFAULT_VALUE_SEPARATOR,) * len(self._value))
         )
 
-        if _name:
+        if _name is not None:
             self._name = _name
 
     @property
@@ -103,7 +103,11 @@ class Directive(ABC, Generic[ValueType]):
     @property
     def _value_str_tokens(self):
         value_it = iter(self.values)
-        yield str(next(value_it))
+        try:
+            yield str(next(value_it))
+        except StopIteration:
+            # Happens if self.values is empty (no-value directives)
+            return
         for sep, value in zip(self._separators[1:], value_it):
             yield sep
             yield str(value)
@@ -111,7 +115,8 @@ class Directive(ABC, Generic[ValueType]):
     @property
     def _str_tokens(self):
         yield self.name
-        yield self._separators[0]
+        if self._separators:
+            yield self._separators[0]
         yield from self._value_str_tokens
 
     @cached_property
