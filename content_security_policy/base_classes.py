@@ -1,13 +1,14 @@
 from __future__ import annotations
 from abc import ABC
 import re
+from functools import cached_property, cache
 from typing import Type, TypeVar, Tuple, Generic, Optional, Iterable, Union
 
 from content_security_policy.constants import (
     DEFAULT_VALUE_SEPARATOR,
+    DEFAULT_DIRECTIVE_SEPARATOR,
     DEFAULT_POLICY_SEPARATOR,
 )
-from content_security_policy.exceptions import BadPolicy
 from content_security_policy.utils import StrOnClassMeta
 
 
@@ -65,7 +66,7 @@ ValueType = TypeVar("ValueType", bound=ValueItemType)
 class Directive(ABC, Generic[ValueType]):
     _value: Tuple[ValueType]
     _name: Optional[str]
-    _separators: Optional[Tuple[str]]
+    _separators: Tuple[str]
 
     def __init__(
         self,
@@ -74,8 +75,11 @@ class Directive(ABC, Generic[ValueType]):
         _separators: Optional[Iterable[str]] = None,
     ):
         self._value = tuple(values)
-        self._separators = _separators or (
-            (DEFAULT_VALUE_SEPARATOR,) * len(self._value)
+
+        self._separators = (
+            tuple(_separators)
+            if _separators is not None
+            else ((DEFAULT_VALUE_SEPARATOR,) * len(self._value))
         )
 
         if _name:
@@ -88,7 +92,7 @@ class Directive(ABC, Generic[ValueType]):
         """
         return self._name
 
-    @property
+    @cached_property
     def values(self) -> Tuple[ValueType]:
         """
         All values of the directive as a tuple
@@ -100,9 +104,9 @@ class Directive(ABC, Generic[ValueType]):
     def _value_str_tokens(self):
         value_it = iter(self.values)
         yield str(next(value_it))
-        for sep in self._separators[1:]:
+        for sep, value in zip(self._separators[1:], value_it):
             yield sep
-            yield str(next(value_it))
+            yield str(value)
 
     @property
     def _str_tokens(self):
@@ -110,7 +114,7 @@ class Directive(ABC, Generic[ValueType]):
         yield self._separators[0]
         yield from self._value_str_tokens
 
-    @property
+    @cached_property
     def value(self) -> str:
         """
         Return the complete value of the directive as a string
@@ -118,6 +122,7 @@ class Directive(ABC, Generic[ValueType]):
         """
         return "".join(self._value_str_tokens)
 
+    @cache
     def __str__(self):
         return "".join(self._str_tokens)
 
@@ -154,11 +159,11 @@ class Policy:
         *directives,
         _separators: Optional[Iterable[str]] = None,
     ):
-        if not directives:
-            raise BadPolicy("Must provide at least one directive")
         self._directives = tuple(directives)
-        self._separators = _separators or (
-            (DEFAULT_POLICY_SEPARATOR,) * (len(self._directives) - 1)
+        self._separators = (
+            tuple(_separators)
+            if _separators is not None
+            else ((DEFAULT_DIRECTIVE_SEPARATOR,) * (len(self._directives) - 1))
         )
 
     @property
@@ -169,10 +174,11 @@ class Policy:
     def _str_tokens(self):
         directives_it = iter(self.directives)
         yield str(next(directives_it))
-        for sep in self._separators:
+        for sep, directive in zip(self._separators, directives_it):
             yield sep
-            yield str(next(directives_it))
+            yield str(directive)
 
+    @cache
     def __str__(self):
         return "".join(self._str_tokens)
 
@@ -180,7 +186,7 @@ class Policy:
         raise NotImplemented
 
     def __add__(self, other: Directive) -> Policy:
-        separators = self._separators + (DEFAULT_POLICY_SEPARATOR,)
+        separators = self._separators + (DEFAULT_DIRECTIVE_SEPARATOR,)
         return type(self)(*self.values, other, _separators=separators)
 
     def __sub__(self, other: Type[Directive]) -> Policy:

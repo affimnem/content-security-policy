@@ -66,7 +66,9 @@ NONE = "'none'"
 SELF = "'self'"
 
 DEFAULT_VALUE_SEPARATOR = " "
-DEFAULT_POLICY_SEPARATOR = "; "
+DEFAULT_DIRECTIVE_SEPARATOR = "; "
+DEFAULT_POLICY_SEPARATOR = ", "
+
 
 # https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-elemet
 SANDBOX_VALUES = (
