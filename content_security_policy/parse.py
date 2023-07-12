@@ -2,7 +2,6 @@ __all__ = ["value_item_from_string", "directive_from_string", "policy_from_strin
 
 from typing import *
 from content_security_policy import *
-from content_security_policy.directives import directive_by_name, UnrecognizedDirective
 from content_security_policy.exceptions import ParsingError, NoSuchDirective
 from content_security_policy.patterns import VALUE_ITEM_SEPARATOR, POLICY_SEPARATOR
 
@@ -71,8 +70,18 @@ def directive_from_string(directive_string: str) -> Directive:
     return dir_class(*values, _name=name, _separators=tuple(separators))
 
 
-def policy_from_string(directive_string: str) -> Policy:
-    raise NotImplemented
+def policy_from_string(policy_string: str) -> Policy:
+    separators = POLICY_SEPARATOR.findall(policy_string)
+    tokens = POLICY_SEPARATOR.split(policy_string)
+    if len(separators) != (len(tokens) - 1):
+        raise ParsingError(
+            "Mismatch in amount of tokens and separators. "
+            "Perhaps your policy is not trimmed?"
+        )
+
+    return Policy(
+        *(directive_from_string(dir) for dir in tokens), _separators=separators
+    )
 
 
 def policy_set_from_string(header_string: str) -> PolicySet:

@@ -96,6 +96,7 @@ class Directive(ABC, Generic[ValueType]):
         """
         return self._value if isinstance(self._value, tuple) else (self._value,)
 
+    @property
     def _value_str_tokens(self):
         value_it = iter(self.values)
         yield str(next(value_it))
@@ -104,20 +105,21 @@ class Directive(ABC, Generic[ValueType]):
             yield str(next(value_it))
 
     @property
-    def value(self) -> str:
-        """
-        Return the complete hash of the directive as a string
-        :return:
-        """
-        return "".join(self._value_str_tokens())
-
     def _str_tokens(self):
         yield self.name
         yield self._separators[0]
-        yield from self._value_str_tokens()
+        yield from self._value_str_tokens
+
+    @property
+    def value(self) -> str:
+        """
+        Return the complete value of the directive as a string
+        :return:
+        """
+        return "".join(self._value_str_tokens)
 
     def __str__(self):
-        return "".join(self._str_tokens())
+        return "".join(self._str_tokens)
 
     def __iter__(self):
         """
@@ -126,7 +128,8 @@ class Directive(ABC, Generic[ValueType]):
         yield from self.values
 
     def __add__(self: SelfType, other: ValueType) -> SelfType:
-        return type(self)(*self.values, other)
+        separators = self._separators + (DEFAULT_VALUE_SEPARATOR,)
+        return type(self)(*self.values, other, _separators=separators)
 
     def __sub__(self: SelfType, other: ValueType) -> SelfType:
         raise NotImplemented
@@ -144,25 +147,41 @@ class SingleValueDirective(Directive[ValueType], ABC, Generic[ValueType]):
 
 
 class Policy:
-    def __init__(self, *directives):
+    _separators: Optional[Tuple[str]]
+
+    def __init__(
+        self,
+        *directives,
+        _separators: Optional[Iterable[str]] = None,
+    ):
         if not directives:
             raise BadPolicy("Must provide at least one directive")
         self._directives = tuple(directives)
+        self._separators = _separators or (
+            (DEFAULT_POLICY_SEPARATOR,) * (len(self._directives) - 1)
+        )
 
     @property
     def directives(self):
         return self._directives
 
+    @property
+    def _str_tokens(self):
+        directives_it = iter(self.directives)
+        yield str(next(directives_it))
+        for sep in self._separators:
+            yield sep
+            yield str(next(directives_it))
+
     def __str__(self):
-        return f"{DEFAULT_POLICY_SEPARATOR}".join(
-            str(directive) for directive in self.directives
-        )
+        return "".join(self._str_tokens)
 
     def __and__(self, other: Policy) -> PolicySet:
         raise NotImplemented
 
     def __add__(self, other: Directive) -> Policy:
-        return type(self)(self.directives, other)
+        separators = self._separators + (DEFAULT_POLICY_SEPARATOR,)
+        return type(self)(*self.values, other, _separators=separators)
 
     def __sub__(self, other: Type[Directive]) -> Policy:
         raise NotImplemented
