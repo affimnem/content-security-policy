@@ -3,7 +3,7 @@ __all__ = ["value_item_from_string", "directive_from_string", "policy_from_strin
 from typing import *
 from content_security_policy import *
 from content_security_policy.exceptions import ParsingError, NoSuchDirective
-from content_security_policy.patterns import VALUE_ITEM_SEPARATOR, POLICY_SEPARATOR
+from content_security_policy.patterns import VALUE_ITEM_SEPARATOR, DIRECTIVE_SEPARATOR,
 
 _PARSING_RULES: Dict[Type[Directive], Tuple[Type[ValueItem]]] = {
     UnrecognizedDirective: tuple(),
@@ -71,8 +71,8 @@ def directive_from_string(directive_string: str) -> Directive:
 
 
 def policy_from_string(policy_string: str) -> Policy:
-    separators = POLICY_SEPARATOR.findall(policy_string)
-    tokens = POLICY_SEPARATOR.split(policy_string)
+    separators = DIRECTIVE_SEPARATOR.findall(policy_string)
+    tokens = DIRECTIVE_SEPARATOR.split(policy_string)
     if len(separators) != (len(tokens) - 1):
         raise ParsingError(
             "Mismatch in amount of tokens and separators. "
