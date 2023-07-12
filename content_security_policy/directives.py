@@ -33,7 +33,7 @@ __all__ = [
 
 from abc import ABC
 from functools import cache
-from typing import Type, Union
+from typing import Type, Union, Optional
 
 from content_security_policy.base_classes import (
     SelfType,
@@ -191,9 +191,16 @@ class UnrecognizedDirective(Directive[UnrecognizedValueItem]):
     A directive whose name is not recognized.
     """
 
-    def __init__(self, name: str, *values):
-        self._name = name
-        super().__init__(*values, _name=name)
+    def __init__(self, *values, name: Optional[str] = None, **kwargs):
+        if name is None and "_name" not in kwargs:
+            raise ValueError(
+                f"You must pass either '_name' or 'name' as a kwarg to {type(self).__name__}."
+                "'name' takes precedence."
+            )
+
+        if name is not None:
+            kwargs["_name"] = name
+        super().__init__(*values, **kwargs)
 
     @property
     def name(self) -> str:

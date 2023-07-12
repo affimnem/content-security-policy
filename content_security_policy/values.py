@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __all__ = [
     "ValueItem",
     "ValueItemType",
@@ -26,7 +28,12 @@ __all__ = [
 from abc import ABC
 from typing import Optional, Tuple, Union, cast, Literal, Type
 
-from content_security_policy.base_classes import ValueItem, ValueItemType, ClassAsValue
+from content_security_policy.base_classes import (
+    ValueItem,
+    ValueItemType,
+    ClassAsValue,
+    SelfType,
+)
 from content_security_policy.constants import (
     HASH_ALGORITHMS,
     NONCE_PREFIX,
@@ -86,16 +93,16 @@ class HashSrc(SourceExpression):
     pattern = HASH_SOURCE
 
     def __init__(
-        self, hash: str, algo: Optional[str] = None, _value: Optional[str] = None
+        self, hash_value: str, algo: Optional[str] = None, _value: Optional[str] = None
     ):
         if _value is not None:
             value = _value
         else:
-            hash = hash.strip("'")
+            hash_value = hash_value.strip("'")
             if algo is not None:
-                hash_value = hash
+                hash_value = hash_value
             else:
-                algo, hash_value = hash.split("-")
+                algo, hash_value = hash_value.split("-")
 
             if not algo in HASH_ALGORITHMS:
                 raise BadSourceExpression(f"Unknown hash algorithm: '{algo}'")
@@ -107,6 +114,10 @@ class HashSrc(SourceExpression):
             value = f"'{algo}-{hash_value}'"
 
         super().__init__(value)
+
+    @classmethod
+    def from_string(cls, str_value: str) -> HashSrc:
+        return cls("", "", _value=str_value)
 
 
 # https://w3c.github.io/webappsec-csp/#grammardef-scheme-source
@@ -180,6 +191,10 @@ class SingleValueItem(ClassAsValue, ValueItem, ABC):
     def __init__(self, *, _value: Optional[str] = None):
         value = _value or self._value
         super().__init__(value)
+
+    @classmethod
+    def from_string(cls: Type[SelfType], value: str) -> SelfType:
+        return cls(_value=value)
 
 
 # According to spec, 'none'  is not a `source-expression`, but a special case of `serialized-source-list`

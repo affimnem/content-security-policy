@@ -26,3 +26,8 @@ class NoneSourceStr(TestCase):
 
     def test_class_str(self):
         self.assertEqual(NONE, str(NoneSrc))
+
+    def test_value_constructor(self):
+        as_str = "'NOnE'"
+        instance = NoneSrc(_value=as_str)
+        self.assertEqual(as_str, str(instance))
