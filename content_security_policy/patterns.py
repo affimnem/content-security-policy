@@ -16,6 +16,8 @@ __all__ = [
     "NOT_SEPARATOR",
     "VALUE_ITEM_SEPARATOR",
     "DIRECTIVE_SEPARATOR",
+    "POLICY_SEPARATOR",
+    "WHITESPACE_HEAD",
 ]
 # These expressions will be compiled with re.IGNORECASE
 __case_insensitive__ = {
@@ -131,15 +133,21 @@ ASCII_WHITESPACE = cast(re.Pattern, f"[{WHITESPACE_CHARS}]")
 VALUE_ITEM_SEPARATOR = cast(re.Pattern, f"{ASCII_WHITESPACE}+")
 DIRECTIVE_SEPARATOR = cast(re.Pattern, f"{ASCII_WHITESPACE}*;{ASCII_WHITESPACE}*")
 
+POLICY_SEPARATOR = cast(re.Pattern, f"{ASCII_WHITESPACE}*,{ASCII_WHITESPACE}*")
 # Used for unrecognized directive names / hash items
 NOT_SEPARATOR = cast(re.Pattern, f"[^{WHITESPACE_CHARS};,]*")
+WHITESPACE_HEAD = re.compile(f"^{ASCII_WHITESPACE}*", flags=re.MULTILINE)
 
 # workaround for the "want to reuse patters but also want to precompile them"-problem
 for name in __all__:
+    pat = locals()[name]
+    if isinstance(pat, re.Pattern):
+        continue
     if name in __case_insensitive__:
-        locals()[name] = re.compile(locals()[name], flags=re.IGNORECASE)
+        locals()[name] = re.compile(pat, flags=re.IGNORECASE)
     else:
-        locals()[name] = re.compile(locals()[name])
+        locals()[name] = re.compile(pat)
+
 
 # Convenience for debug
 if __name__ == "__main__":

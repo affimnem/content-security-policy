@@ -3,7 +3,12 @@ __all__ = ["value_item_from_string", "directive_from_string", "policy_from_strin
 from typing import *
 from content_security_policy import *
 from content_security_policy.exceptions import ParsingError, NoSuchDirective
-from content_security_policy.patterns import VALUE_ITEM_SEPARATOR, DIRECTIVE_SEPARATOR,
+from content_security_policy.patterns import (
+    VALUE_ITEM_SEPARATOR,
+    DIRECTIVE_SEPARATOR,
+    POLICY_SEPARATOR,
+    WHITESPACE_HEAD,
+)
 
 _PARSING_RULES: Dict[Type[Directive], Tuple[Type[ValueItem]]] = {
     UnrecognizedDirective: tuple(),
@@ -18,7 +23,7 @@ _PARSING_RULES: Dict[Type[Directive], Tuple[Type[ValueItem]]] = {
     Webrtc: (WebrtcValue,),
     Sandbox: (SandboxToken,),
     FrameAncestors: (NoneSrc, SelfSrc, HostSrc, SchemeSrc),
-    ReportUriValue: (UriReference,),
+    ReportUri: (UriReference,),
     ReportTo: (ReportToValue,),
 }
 
@@ -33,13 +38,16 @@ def value_item_from_string(
     :return: Object representing the hash.
     """
     for d_type, value_types in _PARSING_RULES.items():
-        if issubclass(directive_type, d_type):
-            for v_type in value_types:
-                if v_type.pattern.fullmatch(value_string):
-                    v_type = cast(Type[ValueItem], v_type)
-                    return v_type.from_string(value_string)
+        try:
+            if issubclass(directive_type, d_type):
+                for v_type in value_types:
+                    if v_type.pattern.fullmatch(value_string):
+                        v_type = cast(Type[ValueItem], v_type)
+                        return v_type.from_string(value_string)
 
-            return UnrecognizedValueItem(value_string)
+                return UnrecognizedValueItem(value_string)
+        except Exception as e:
+            print(e)
 
     raise ValueError(
         f"Failed to find parsing rules for directive type {directive_type}"
@@ -84,5 +92,21 @@ def policy_from_string(policy_string: str) -> Policy:
     )
 
 
-def policy_set_from_string(header_string: str) -> PolicySet:
-    raise NotImplemented
+def policy_list_from_string(policy_list_string: str) -> PolicyList:
+    head = WHITESPACE_HEAD.match(policy_list_string).group(0)
+    policy_list_string = WHITESPACE_HEAD.sub("", policy_list_string)
+
+    # I have given up on a regex replace for trailing whitespace...
+    policy_list_string = policy_list_string[::-1]
+    tail = WHITESPACE_HEAD.match(policy_list_string).group(0)[::-1]
+    policy_list_string = WHITESPACE_HEAD.sub("", policy_list_string)
+    policy_list_string = policy_list_string[::-1]
+
+    separators = POLICY_SEPARATOR.findall(policy_list_string)
+    tokens = POLICY_SEPARATOR.split(policy_list_string)
+    return PolicyList(
+        *(policy_from_string(pol) for pol in tokens),
+        _head=head,
+        _tail=tail,
+        _separators=separators,
+    )

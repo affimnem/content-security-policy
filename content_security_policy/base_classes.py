@@ -187,8 +187,8 @@ class Policy:
     def __str__(self):
         return "".join(self._str_tokens)
 
-    def __and__(self, other: Policy) -> PolicySet:
-        raise NotImplemented
+    def __and__(self, other: Policy) -> PolicyList:
+        return PolicyList(self, other)
 
     def __add__(self, other: Directive) -> Policy:
         separators = self._separators + (DEFAULT_DIRECTIVE_SEPARATOR,)
@@ -220,6 +220,41 @@ class Policy:
         yield from self._directives
 
 
-class PolicySet:
-    def __init__(self, *policies):
-        raise NotImplemented
+class PolicyList:
+    _policies: Tuple[Policy]
+    _separators: Tuple[str]
+
+    def __init__(
+        self,
+        *policies: Policy,
+        _separators: Optional[Iterable[str]] = None,
+        _head: Optional[str] = None,
+        _tail: Optional[str] = None,
+    ):
+        self._policies = tuple(policies)
+        self._separators = (
+            tuple(_separators)
+            if _separators is not None
+            else ((DEFAULT_POLICY_SEPARATOR,) * (len(self._policies) - 1))
+        )
+        self._head = _head
+        self._tail = _tail
+
+    @property
+    def _str_tokens(self):
+        if self._head:
+            yield self._head
+
+        policy_it = iter(self._policies)
+        yield str(next(policy_it))
+
+        for sep, policy in zip(self._separators, policy_it):
+            yield sep
+            yield str(policy)
+
+        if self._tail:
+            yield self._tail
+
+    @cache
+    def __str__(self):
+        return "".join(self._str_tokens)

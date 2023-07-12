@@ -1,6 +1,10 @@
 from unittest import TestCase
 
-from content_security_policy.parse import directive_from_string, policy_from_string
+from content_security_policy.parse import (
+    directive_from_string,
+    policy_from_string,
+    policy_list_from_string,
+)
 
 
 class DirectiveParsing(TestCase):
@@ -17,4 +21,14 @@ class DirectiveParsing(TestCase):
             "'none'; base-uri https://*.example.com"
         )
         parsed = policy_from_string(as_string)
+        self.assertEqual(as_string, str(parsed))
+
+    def test_parse_serialize_policy_list(self):
+        as_string = "default-src 'self'; script-src 'nonce-ABCD'; frame-ancestors 'self'; upgrade-insecure-requests;"
+        parsed = policy_list_from_string(as_string)
+        self.assertEqual(as_string, str(parsed))
+
+    def test_parse_serialize_messy_policy_list(self):
+        as_string = "   \n require-trusted-types-for 'script';report-uri /_/somehing/cspreport, script-src 'report-sample' 'nonce-EmTYwW9IZXpvlIOURJMuAQ' 'unsafe-inline';object-src 'none';base-uri 'self';report-uri /_/something/cspreport;worker-src 'self' \t "
+        parsed = policy_list_from_string(as_string)
         self.assertEqual(as_string, str(parsed))

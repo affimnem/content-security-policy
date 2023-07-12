@@ -5,5 +5,5 @@ from content_security_policy.base_classes import (
     ValueItem,
     ValueItemType,
     Policy,
-    PolicySet,
+    PolicyList,
 )
