@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "content-security-policy"
 version = "0.1.0"
-description = ""
+description = "Create, maintain, parse and manipulate Content Security Policies"
 authors = ["no.shoes <no.shoes@posteo.net>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.9"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
