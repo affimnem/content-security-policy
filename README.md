@@ -136,6 +136,12 @@ policy += frame_ancestors
 assert str(policy) == "deFault-src 'self'; \t object-src 'none'; Frame-Ancestors\t 'self' https://example.com"
 ```
 
+# Installation
+
+```shell
+pip install content-security-policy
+```
+
 # Priorities
 
 ## 1. Correctness
