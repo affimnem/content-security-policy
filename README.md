@@ -50,7 +50,7 @@ There are classes for policy, different kinds of directives and directive values
 
 For now, you will need to check the source code / rely on auto-completion.
 The [tests](./content_security_policy/test) cover a lot of the intended use-cases.
-Some of the general ideas are is hopefully well conveyed in these examples:
+Some of the general ideas are hopefully well conveyed in these examples:
 
 ### Something very simple
 
