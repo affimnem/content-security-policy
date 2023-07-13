@@ -31,8 +31,7 @@ __all__ = [
 ]
 
 from abc import ABC
-from functools import cache
-from typing import Type, Union, Optional
+from typing import Union, Optional
 
 from content_security_policy.base_classes import (
     SelfType,
@@ -41,10 +40,8 @@ from content_security_policy.base_classes import (
 )
 from content_security_policy.exceptions import (
     BadDirectiveValue,
-    NoSuchDirective,
     BadSourceList,
 )
-from content_security_policy.utils import kebab_to_pascal
 from content_security_policy.values import (
     SourceExpression,
     SourceList,
