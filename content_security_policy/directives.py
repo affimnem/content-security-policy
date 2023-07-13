@@ -28,7 +28,6 @@ __all__ = [
     "Webrtc",
     "WorkerSrc",
     "UnrecognizedDirective",
-    "directive_by_name",
 ]
 
 from abc import ABC
@@ -205,19 +204,3 @@ class UnrecognizedDirective(Directive[UnrecognizedValueItem]):
     @property
     def name(self) -> str:
         return self._name
-
-
-@cache
-def directive_by_name(directive_name: str) -> Type[Directive]:
-    """
-    Get class for directive by its real _name.
-    :param directive_name: real _name of the directive, e.g. "script-src".
-    :return: Class for the directive.
-    """
-    class_name = kebab_to_pascal(directive_name)
-    try:
-        return getattr(__import__(__name__), class_name)
-    except AttributeError:
-        raise NoSuchDirective(
-            f"Can not find class for directive _name {directive_name}"
-        )

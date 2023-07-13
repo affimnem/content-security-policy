@@ -2,14 +2,15 @@ from __future__ import annotations
 from abc import ABC
 import re
 from functools import cached_property, cache
-from typing import Type, TypeVar, Tuple, Generic, Optional, Iterable, Union
+from typing import Type, TypeVar, Tuple, Generic, Optional, Iterable, Union, Dict, Any
 
 from content_security_policy.constants import (
     DEFAULT_VALUE_SEPARATOR,
     DEFAULT_DIRECTIVE_SEPARATOR,
     DEFAULT_POLICY_SEPARATOR,
 )
-from content_security_policy.utils import StrOnClassMeta
+from content_security_policy.exceptions import NoSuchDirective
+from content_security_policy.utils import StrOnClassMeta, kebab_to_snake
 
 
 class ValueItem(ABC):
@@ -62,6 +63,8 @@ ValueItemType = Union[ValueItem, Type[ValueItem]]
 SelfType = TypeVar("SelfType", bound="Directive")
 ValueType = TypeVar("ValueType", bound=ValueItemType)
 
+_DIRECTIVE_REGISTER: Dict[str, Type[Directive]] = {}
+
 
 class Directive(ABC, Generic[ValueType]):
     _value: Tuple[ValueType]
@@ -84,6 +87,27 @@ class Directive(ABC, Generic[ValueType]):
 
         if _name is not None:
             self._name = _name
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        names = {cls.__name__}
+        if hasattr(cls, "_name"):
+            names.add(cls._name)
+            names.add(kebab_to_snake(cls._name))
+        for name in names:
+            if name in _DIRECTIVE_REGISTER:
+                raise ValueError(f"{name} already registered in directive register.")
+            _DIRECTIVE_REGISTER[name] = cls
+
+    @classmethod
+    def class_by_name(cls, directive_name: str) -> Type[Directive]:
+        for name in (directive_name, directive_name.lower()):
+            if name in _DIRECTIVE_REGISTER:
+                return _DIRECTIVE_REGISTER[name]
+
+        raise NoSuchDirective(
+            f"Can not find class for directive _name {directive_name}"
+        )
 
     @property
     def name(self) -> str:
@@ -147,7 +171,7 @@ class Directive(ABC, Generic[ValueType]):
 
 class SingleValueDirective(Directive[ValueType], ABC, Generic[ValueType]):
     """
-    A directive that only supports one hash item.
+    A directive that only supports one value item.
     """
 
     # __init__ still allows for multiple values to be passed to enable lenient parsing.
@@ -187,37 +211,88 @@ class Policy:
     def __str__(self):
         return "".join(self._str_tokens)
 
-    def __and__(self, other: Policy) -> PolicyList:
-        return PolicyList(self, other)
+    @cache
+    def _get_indices(self, directive_type: Type[Directive]) -> Tuple[int]:
+        indices = []
+        for i, directive in enumerate(self.directives):
+            if isinstance(directive, directive_type):
+                indices.append(i)
 
-    def __add__(self, other: Directive) -> Policy:
-        separators = self._separators + (DEFAULT_DIRECTIVE_SEPARATOR,)
-        return type(self)(*self.values, other, _separators=separators)
+        return tuple(indices)
 
-    def __sub__(self, other: Type[Directive]) -> Policy:
-        raise NotImplemented
+    @cache
+    def __getitem__(self, key: Union[Type[Directive], int, str]) -> Directive:
+        """
+        Get a directive of the policy. If key is an int, the key-th directive in the policy is returned.
+        If key is a string or a Directive type, the FIRST directive of that type is returned.
+        String keys are case-insensitive and support both PascalCase and kebab-case (e.g. ScriptSrc and script-src)
+        :param key: selector for directive.
+        :return: The selected directive.
+        """
+        if type(key) is int:
+            return self.directives[key]
 
-    def __getitem__(self, item: Type[Directive]):
+        if isinstance(key, str):
+            key = Directive.class_by_name(key)
+        elif not issubclass(key, Directive):
+            raise TypeError(
+                f"Item must be either an int, a string or a subclass of {Directive.__name__}, not {type(key)}"
+            )
+
+        for directive in self.directives:
+            if isinstance(directive, key):
+                return directive
+
+        raise IndexError(f"Policy does not have a {key.__name__} directive.")
+
+    def __getattr__(self, name: str) -> Any:
         """
         Get a directive of the policy.
-        :param item:
-        :return:
+        :param name: Directive name like ScriptSrc or script-src
+        :return: First instance of the specified directive type in this policy.
         """
-        raise NotImplemented
-
-    def __getattr__(self, item):
-        """
-        Get a directive of the policy.
-        :param item:
-        :return:
-        """
-        raise NotImplemented
+        if name in _DIRECTIVE_REGISTER:
+            try:
+                return self.__getitem__(name)
+            except IndexError as e:
+                raise AttributeError(*e.args)
+        else:
+            return object.__getattribute__(self, name)
 
     def __iter__(self):
         """
         Iterate over directives.
         """
-        yield from self._directives
+        yield from self.directives
+
+    def __add__(self, other: Directive) -> Policy:
+        """
+        Add a new directive to the policy.
+        :param other:
+        :return:
+        """
+        separators = self._separators + (DEFAULT_DIRECTIVE_SEPARATOR,)
+        return type(self)(*self.directives, other, _separators=separators)
+
+    def __sub__(self, other: Type[Directive]) -> Policy:
+        """
+        Get a copy of the policy with all directives of the specified type removed.
+        :param other: Type of directive to remove.
+        :return: New policy with no directive of type other.
+        """
+        new_directives = []
+        new_separators = []
+        removed_indices = self._get_indices(other)
+        for i, directive in enumerate(self.directives):
+            if i not in removed_indices:
+                new_directives.append(directive)
+                if i != 0 and len(new_directives):
+                    new_separators.append(self._separators[i - 1])
+
+        return type(self)(*new_directives, _separators=new_separators)
+
+    def __and__(self, other: Policy) -> PolicyList:
+        return PolicyList(self, other)
 
 
 class PolicyList:

@@ -67,7 +67,7 @@ def directive_from_string(directive_string: str) -> Directive:
 
     name, value_items = tokens[0], tokens[1:]
     try:
-        dir_class = directive_by_name(name.lower())
+        dir_class = Directive.class_by_name(name.lower())
     except NoSuchDirective:
         dir_class = UnrecognizedDirective
     dir_class = cast(Type[Directive], dir_class)

@@ -111,7 +111,7 @@ HOST_PART = rf"(\*|(\*\.)?{HOST_CHAR}+(\.{HOST_CHAR}+))"
 PORT_PART = rf"(\*|{DIGIT}+)"
 PATH_PART = PATH_ABSOLUTE
 HOST_SOURCE = cast(
-    re.Pattern, f"({SCHEME_PART}://)?{HOST_PART}(:{PORT_PART})?{PATH_PART}?"
+    re.Pattern, f"({SCHEME_PART}://)?{HOST_PART}(:{PORT_PART})?({PATH_PART})?"
 )
 # https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
 KEYWORD_SOURCE = cast(re.Pattern, "|".join(KEYWORD_SOURCES))
