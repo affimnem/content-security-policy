@@ -22,7 +22,7 @@ Any policy / directive / directive value object you create is immutable.
 
 ## Strict construction
 
-> :warning: This feature is still under construction! There are a lot of things not yet being validated.
+> :warning: This feature is still being developed! There are a lot of things not yet being validated.
 
 When explicitly constructing objects with invalid values, errors will be raised! For example, you can not construct a
 nonce source expression with non-base64 characters.
