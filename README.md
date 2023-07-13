@@ -42,6 +42,39 @@ The parsing functions should be able to take any string and "somehow" parse it. 
 matched to a known directive or directive value, instances of `UnrecognizedDirective` and `UnrecognizedValueItem`
 will represent those parts of the string.
 
+```python
+from content_security_policy.parse import *
+
+policy_string = "script-src 'strict-dynamic' garbage; whatsthis directive 'supposedTobe'?"
+
+policy = policy_from_string(policy_string)
+
+for directive in policy:
+    print(f"Name: {directive.name}\nType: {directive.__class__.__name__}\nValues:")
+    for val in directive:
+        print(f"\tType: {val.__class__.__name__}\n\tValue: {val}\n")
+```
+
+```
+Name: script-src
+Type: ScriptSrc
+Values:
+        Type: KeywordSource
+        Value: 'strict-dynamic'
+
+        Type: UnrecognizedValueItem
+        Value: garbage
+
+Name: whatsthis
+Type: UnrecognizedDirective
+Values:
+        Type: UnrecognizedValueItem
+        Value: directive
+
+        Type: UnrecognizedValueItem
+        Value: 'supposedTobe'?
+```
+
 # Usage
 
 There are classes for policy, different kinds of directives and directive values.
@@ -102,7 +135,6 @@ policy += frame_ancestors
 # Notice that whitespace and capitalization was preserved!
 assert str(policy) == "deFault-src 'self'; \t object-src 'none'; Frame-Ancestors\t 'self' https://example.com"
 ```
-
 
 # Priorities
 
