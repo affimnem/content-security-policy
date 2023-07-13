@@ -45,6 +45,24 @@ class SimpleExample(TestCase):
             str(policy),
         )
 
+    def test_complex_manipulation(self):
+        policy = policy_from_string(
+            "deFault-src 'self'; Frame-Ancestors\t 'self'; \t object-src 'none'"
+        )
+
+        frame_ancestors = policy["frame-ancestors"]
+        # alternatively:
+        # frame_ancestors = policy.frame_ancestors
+        frame_ancestors += HostSrc("https://example.com")
+
+        policy -= FrameAncestors
+        policy += frame_ancestors
+
+        self.assertEqual(
+            "deFault-src 'self'; \t object-src 'none'; Frame-Ancestors\t 'self' https://example.com",
+            str(policy),
+        )
+
     def test_getitem_int(self):
         policy = Policy(
             DefaultSrc(KeywordSource.self), FrameAncestors(SelfSrc), ObjectSrc(NoneSrc)
