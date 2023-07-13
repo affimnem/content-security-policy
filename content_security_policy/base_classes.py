@@ -163,7 +163,7 @@ class Directive(ABC, Generic[ValueType]):
 
     def __add__(self: SelfType, other: ValueType) -> SelfType:
         separators = self._separators + (DEFAULT_VALUE_SEPARATOR,)
-        return type(self)(*self.values, other, _separators=separators)
+        return type(self)(*self.values, other, _separators=separators, _name=self._name)
 
     def __sub__(self: SelfType, other: ValueType) -> SelfType:
         raise NotImplemented
