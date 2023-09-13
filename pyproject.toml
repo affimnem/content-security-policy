@@ -7,9 +7,14 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
+watchdog = { version = "^3.0.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
+django = "^4.2.5"
+
+[tool.poetry.extras]
+django = ["watchdog"]
 
 [build-system]
 requires = ["poetry-core"]
