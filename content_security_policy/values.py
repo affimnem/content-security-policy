@@ -26,40 +26,40 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import Optional, Tuple, Union, cast, Literal, Type
+from typing import Literal, Optional, Tuple, Type, Union, cast
 
 from content_security_policy.base_classes import (
-    ValueItem,
-    ValueItemType,
     ClassAsValue,
     SelfType,
+    ValueItem,
+    ValueItemType,
 )
 from content_security_policy.constants import (
     HASH_ALGORITHMS,
-    NONCE_PREFIX,
     KEYWORD_SOURCES,
+    NONCE_PREFIX,
     NONE,
+    SANDBOX_VALUES,
     SELF,
     WEBRTC_VALUES,
-    SANDBOX_VALUES,
 )
 from content_security_policy.exceptions import BadDirectiveValue, BadSourceExpression
 from content_security_policy.patterns import (
-    TOKEN,
     BASE64_VALUE,
-    SCHEME,
-    NONCE_SOURCE,
     HASH_SOURCE,
-    SCHEME_SOURCE,
     HOST_SOURCE,
-    NONE_SOURCE,
-    SELF_SOURCE,
-    URI_REFERENCE,
-    NOT_SEPARATOR,
     # Appending _RE, so they are easier to distinguish from the constants
     KEYWORD_SOURCE as KEYWORD_SOURCE_RE,
-    WEBRTC_VALUE as WEBRTC_VALUE_RE,
+    NONCE_SOURCE,
+    NONE_SOURCE,
+    NOT_SEPARATOR,
     SANDBOX_VALUE as SANDBOX_VALUE_RE,
+    SCHEME,
+    SCHEME_SOURCE,
+    SELF_SOURCE,
+    TOKEN,
+    URI_REFERENCE,
+    WEBRTC_VALUE as WEBRTC_VALUE_RE,
 )
 from content_security_policy.utils import AutoInstanceMixin
 
@@ -81,7 +81,8 @@ class NonceSrc(SourceExpression):
             nonce = nonce.strip("'").lstrip(NONCE_PREFIX)
             if not BASE64_VALUE.fullmatch(nonce):
                 raise BadSourceExpression(
-                    f"Nonce value '{nonce}' does not match {BASE64_VALUE.pattern}"
+                    f"Nonce value '{nonce}' does not match "
+                    f"{BASE64_VALUE.pattern.pattern}"
                 )
             value = f"'{NONCE_PREFIX}{nonce}'"
 
@@ -104,12 +105,13 @@ class HashSrc(SourceExpression):
             else:
                 algo, hash_value = hash_value.split("-")
 
-            if not algo in HASH_ALGORITHMS:
+            if algo not in HASH_ALGORITHMS:
                 raise BadSourceExpression(f"Unknown hash algorithm: '{algo}'")
 
             if not BASE64_VALUE.fullmatch(hash_value):
                 raise BadSourceExpression(
-                    f"Hash value '{hash_value}' does not match {BASE64_VALUE.pattern}"
+                    f"Hash value '{hash_value}' does not match "
+                    f"{BASE64_VALUE.pattern.pattern}"
                 )
             value = f"'{algo}-{hash_value}'"
 
@@ -131,7 +133,7 @@ class SchemeSrc(SourceExpression):
             scheme = scheme.rstrip(":")
             if not SCHEME.fullmatch(scheme):
                 raise BadSourceExpression(
-                    f"Scheme '{scheme}' does not match {SCHEME.pattern}"
+                    f"Scheme '{scheme}' does not match {SCHEME.pattern.pattern}"
                 )
             value = f"{scheme}:"
         super().__init__(value)
@@ -144,8 +146,8 @@ class HostSrc(SourceExpression):
     def __init__(self, host: str, _value: Optional[str] = None):
         if _value is not None:
             value = _value
-        elif not HOST_SOURCE.fullmatch(host):
-            raise BadSourceExpression(f"{host} does not match {HOST_SOURCE.pattern}")
+        elif not self.pattern.fullmatch(host):
+            raise BadSourceExpression(f"{host} does not match {self.pattern.pattern}")
         else:
             value = host
         super().__init__(value)
@@ -173,9 +175,9 @@ class KeywordSource(AutoInstanceMixin, SourceExpression):
         else:
             no_ticks_keyword = keyword.strip("'")
             keyword = f"'{no_ticks_keyword}'"
-            if not KEYWORD_SOURCE_RE.fullmatch(keyword):
+            if not self.pattern.fullmatch(keyword):
                 raise BadSourceExpression(
-                    f"{keyword} does not match {KEYWORD_SOURCE_RE.pattern}"
+                    f"{keyword} does not match {self.pattern.pattern}"
                 )
             value = keyword
 
@@ -226,7 +228,7 @@ class WebrtcValue(AutoInstanceMixin, ValueItem):
             value = f"'{no_ticks_keyword}'"
             if not WEBRTC_VALUE_RE.fullmatch(value):
                 raise BadSourceExpression(
-                    f"{value} does not match {KEYWORD_SOURCE_RE.pattern}"
+                    f"{value} does not match {KEYWORD_SOURCE_RE.pattern.pattern}"
                 )
 
         super().__init__(_value)
@@ -262,7 +264,7 @@ class SandboxToken(AutoInstanceMixin, ValueItem):
             value = _value
         elif not SANDBOX_VALUE_RE.fullmatch(value):
             raise BadDirectiveValue(
-                f"{value} does not match {SANDBOX_VALUE_RE.pattern}"
+                f"{value} does not match {SANDBOX_VALUE_RE.pattern.pattern}"
             )
         super().__init__(value)
 
@@ -272,7 +274,7 @@ SandboxValue = Union[Tuple[SandboxToken], Literal[""]]
 
 
 # 'self' is a keyword source expression, but it is also a possible hash for frame-ancestors, whereas other
-# KeywordSources are not valid values for frame-ancestors.
+# KeywordSources are not valid static_values for frame-ancestors.
 class SelfSrc(SingleValueItem):
     pattern = SELF_SOURCE
     _value = SELF
@@ -293,8 +295,8 @@ class ReportToValue(ValueItem):
     def __init__(self, value: str, _value: Optional[str] = None):
         if _value is not None:
             value = _value
-        elif not TOKEN.fullmatch(value):
-            raise BadDirectiveValue(f"{value} does not match {TOKEN.pattern}")
+        elif not self.pattern.fullmatch(value):
+            raise BadDirectiveValue(f"{value} does not match {self.pattern.pattern}")
 
         super().__init__(value)
 
@@ -306,8 +308,8 @@ class UriReference(ValueItem):
     def __init__(self, value: str, _value: Optional[str] = None):
         if _value is not None:
             value = _value
-        elif not URI_REFERENCE.fullmatch(value):
-            raise BadDirectiveValue(f"{value} does not match {URI_REFERENCE.pattern}")
+        elif not self.pattern.fullmatch(value):
+            raise BadDirectiveValue(f"{value} does not match {self.pattern.pattern}")
 
         super().__init__(value)
 
