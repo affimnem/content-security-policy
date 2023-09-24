@@ -86,3 +86,6 @@ SANDBOX_VALUES = (
     "allow-top-navigation-by-user-activation",
     "allow-top-navigation-to-custom-protocols",
 )
+
+CSP_HEADER = "Content-Security-Policy"
+CSP_RO_HEADER = "Content-Security-Policy-Report-Only"
