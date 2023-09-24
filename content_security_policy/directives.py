@@ -31,29 +31,16 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import Union, Optional
+from typing import Optional, Union
 
-from content_security_policy.base_classes import (
-    SelfType,
-    Directive,
-    SingleValueDirective,
-)
+from content_security_policy.base_classes import (Directive, SelfType, SingleValueDirective)
 from content_security_policy.exceptions import (
     BadDirectiveValue,
     BadSourceList,
 )
-from content_security_policy.values import (
-    SourceExpression,
-    SourceList,
-    SandboxValue,
-    AncestorSourceList,
-    AncestorSource,
-    NoneSrc,
-    NoneSrcType,
-    ReportToValue,
-    ReportUriValue,
-    UnrecognizedValueItem,
-)
+from content_security_policy.values import (AncestorSource, AncestorSourceList, NoneSrc, NoneSrcType, ReportToValue,
+                                            ReportUriValue, SandboxValue, SourceExpression, SourceList,
+                                            UnrecognizedValueItem)
 
 
 # This is not called FetchDirective because not all directives accepting a Source List are categorised as
@@ -190,8 +177,8 @@ class UnrecognizedDirective(Directive[UnrecognizedValueItem]):
     def __init__(self, *values, name: Optional[str] = None, **kwargs):
         if name is None and "_name" not in kwargs:
             raise ValueError(
-                f"You must pass either '_name' or 'name' as a kwarg to {type(self).__name__}."
-                "'name' takes precedence."
+                f"You must pass either '_name' or 'name' as a kwarg to "
+                f"{type(self).__name__}. 'name' takes precedence."
             )
 
         if name is not None:

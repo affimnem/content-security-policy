@@ -28,17 +28,17 @@ __case_insensitive__ = {
     "SELF_SOURCE",
 }
 
+import re
+from typing import cast
+
 from content_security_policy.constants import (
     HASH_ALGORITHMS,
     KEYWORD_SOURCES,
-    WEBRTC_VALUES,
-    SANDBOX_VALUES,
     NONE,
+    SANDBOX_VALUES,
     SELF,
+    WEBRTC_VALUES,
 )
-
-import re
-from typing import cast
 
 # https://tools.ietf.org/html/rfc5234#appendix-B.1
 ALPHA = cast(re.Pattern, r"[A-Za-z]")

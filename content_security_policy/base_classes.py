@@ -1,13 +1,14 @@
 from __future__ import annotations
+
 from abc import ABC
+from functools import cache, cached_property
 import re
-from functools import cached_property, cache
-from typing import Type, TypeVar, Tuple, Generic, Optional, Iterable, Union, Dict, Any
+from typing import Any, Dict, Generic, Iterable, Optional, Tuple, Type, TypeVar, Union
 
 from content_security_policy.constants import (
-    DEFAULT_VALUE_SEPARATOR,
     DEFAULT_DIRECTIVE_SEPARATOR,
     DEFAULT_POLICY_SEPARATOR,
+    DEFAULT_VALUE_SEPARATOR,
 )
 from content_security_policy.exceptions import NoSuchDirective
 from content_security_policy.utils import StrOnClassMeta, kebab_to_snake
