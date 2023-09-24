@@ -107,7 +107,7 @@ SCHEME_SOURCE = cast(re.Pattern, f"{SCHEME}:")
 # https://w3c.github.io/webappsec-csp/#grammardef-host-source
 SCHEME_PART = SCHEME
 HOST_CHAR = f"({ALPHA}|{DIGIT}|-)"
-HOST_PART = rf"(\*|(\*\.)?{HOST_CHAR}+(\.{HOST_CHAR}+))"
+HOST_PART = rf"(\*|(\*\.)?{HOST_CHAR}+(\.{HOST_CHAR}+)*)"
 PORT_PART = rf"(\*|{DIGIT}+)"
 PATH_PART = PATH_ABSOLUTE
 HOST_SOURCE = cast(
