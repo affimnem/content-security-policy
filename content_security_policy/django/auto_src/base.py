@@ -80,10 +80,10 @@ class AutoSrcDirective(
     """
     Automatically generates a -src directive from a list of source static_values and
     files in watch_dirs. Subclasses need to provide:
-    - the directive class
+    - a directive class
     - a suffix (file extension) that will be "watched"
     - a method to compute a directive value that allow-lists a file in watch_dirs
-      whenever it changes.
+      whenever it changes: compute_value_item
     """
 
     @property
@@ -101,6 +101,31 @@ class AutoSrcDirective(
         Directive class to render.
         """
         ...
+
+    @abstractmethod
+    def compute_value_item(self, path: Path) -> DynamicValueType:
+        """
+        Compute a directive value item to allow-list a local file.
+        """
+        ...
+
+    def __init__(
+        self,
+        *static_values: Tuple[SourceExpression],
+        use_self_keyword: bool = False,
+        watch_dirs: List[Path | str] | None = None,
+        watch_apps: List[str] | None = None,
+    ):
+        self.static_values = static_values
+        self.use_self_keyword = use_self_keyword
+        self._watch_dirs = [Path(d) for d in watch_dirs] if watch_dirs else []
+        self._watch_apps = watch_apps or []
+
+        # Computing values for files is deferred until the first render,
+        # because you might need django to be fully started up to compute anyting
+        # E.g.: AutoHostSrc calls django.templatetags.static.static, which can only be
+        # called once django is fully up. See self.init_files.
+        self.files: Dict[Path, DynamicValueType] = {}
 
     @property
     def name(self):
@@ -127,31 +152,6 @@ class AutoSrcDirective(
         absolute_watch_dirs = [dir.absolute() for dir in self._watch_dirs]
 
         return list(set(absolute_watch_dirs + app_static_dirs))
-
-    def __init__(
-        self,
-        *static_values: Tuple[SourceExpression],
-        use_self_keyword: bool = False,
-        watch_dirs: List[Path | str] | None = None,
-        watch_apps: List[str] | None = None,
-    ):
-        self.static_values = static_values
-        self.use_self_keyword = use_self_keyword
-        self._watch_dirs = [Path(d) for d in watch_dirs] if watch_dirs else []
-        self._watch_apps = watch_apps or []
-
-        # Computing values for files is deferred until the first render,
-        # because you might need django to be fully started up to compute anyting
-        # E.g.: AutoHostSrc calls django.templatetags.static.static, which can only be
-        # called once django is fully up. See self.init_files.
-        self.files: Dict[Path, DynamicValueType] = {}
-
-    @abstractmethod
-    def compute_value_item(self, path: Path) -> DynamicValueType:
-        """
-        Compute a directive value item to allow-list a local file.
-        """
-        ...
 
     def on_any_event(self, event: FileSystemEvent):
         """
@@ -189,7 +189,9 @@ class AutoSrcDirective(
 
     @init_before_first_render
     def render(self, **kwargs) -> DirectiveType:
-        return self.directive(*self.static_values, self.files.values())
+        # Sorting to avoid non-deterministic tests
+        values = sorted(self.files.values())
+        return self.directive(*self.static_values, values)
 
 
 class AutoHostSrc(AutoSrcDirective[DirectiveType, str], metaclass=ABCMeta):
@@ -238,7 +240,9 @@ class AutoHostSrc(AutoSrcDirective[DirectiveType, str], metaclass=ABCMeta):
                 names=missing,
             )
 
-        dynamic = [HostSrc(f"{scheme}://{host}{slug}") for slug in self.files.values()]
+        # Sorting to avoid non-deterministic tests
+        paths = sorted(self.files.values())
+        dynamic = [HostSrc(f"{scheme}://{host}{path}") for path in paths]
 
         return self.directive(*self.static_values, *dynamic)
 
