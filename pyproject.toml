@@ -12,6 +12,7 @@ watchdog = { version = "^3.0.0", optional = true }
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
 django = "^4.2.5"
+coverage = "^7.3.2"
 
 [tool.poetry.extras]
 django = ["watchdog"]
@@ -19,3 +20,10 @@ django = ["watchdog"]
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.coverage.run]
+omit = [
+    "content_security_policy/django/wsgi.py",
+    "content_security_policy/django/utils/__init__.py",
+    "content_security_policy/django/*_settings.py",
+]
