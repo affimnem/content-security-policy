@@ -21,7 +21,7 @@ from content_security_policy.values import HostSrc, SourceExpression
 SRC_HASH_FUN = "sha384"
 
 
-def fill_render_args(*argnames: str):
+def fill_render_args(*argnames: str, optional: List[str] = None):
     """
     Decorator that overrides kwargs for render with equally named instance attributes.
     """
@@ -35,6 +35,10 @@ def fill_render_args(*argnames: str):
                 if on_self is None and in_args is None:
                     missing.append(arg)
                 kwargs[arg] = on_self or in_args
+
+            if optional is not None:
+                for arg in optional:
+                    kwargs[arg] = kwargs.get(arg) or getattr(self, arg)
 
             if missing:
                 raise ValuesMissing(
@@ -206,11 +210,13 @@ class AutoHostSrc(AutoSrcDirective[DirectiveType, str], metaclass=ABCMeta):
         *static_values: Tuple[SourceExpression],
         scheme: Optional[str] = None,
         host: Optional[str] = None,
+        port: Optional[int] = None,
         **kwargs,
     ):
         super().__init__(*static_values, **kwargs)
         self.scheme = scheme
         self.host = host
+        self.port = port
 
     def compute_value_item(self, path: Path) -> str:
         """
@@ -226,9 +232,14 @@ class AutoHostSrc(AutoSrcDirective[DirectiveType, str], metaclass=ABCMeta):
         )
 
     @init_before_first_render
-    @fill_render_args("scheme", "host")
+    @fill_render_args("scheme", "host", optional=["port"])
     def render(
-        self, *, scheme: Optional[str] = None, host: Optional[str] = None, **kwargs
+        self,
+        *,
+        scheme: Optional[str] = None,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        **kwargs,
     ) -> DirectiveType:
         if scheme is None or host is None:
             missing = {"scheme": scheme, "host": host}
@@ -240,9 +251,14 @@ class AutoHostSrc(AutoSrcDirective[DirectiveType, str], metaclass=ABCMeta):
                 names=missing,
             )
 
+        origin = f"{scheme}://{host}"
+
+        if port is not None:
+            origin = f"{origin}:{port}"
+
         # Sorting to avoid non-deterministic tests
         paths = sorted(self.files.values())
-        dynamic = [HostSrc(f"{scheme}://{host}{path}") for path in paths]
+        dynamic = [HostSrc(f"{origin}{path}") for path in paths]
 
         return self.directive(*self.static_values, *dynamic)
 
