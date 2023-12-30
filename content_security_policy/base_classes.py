@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC
 from functools import cache, cached_property
+from itertools import zip_longest
 import re
 from typing import Any, Dict, Generic, Iterable, Optional, Tuple, Type, TypeVar, Union
 
@@ -182,11 +183,9 @@ class SingleValueDirective(Directive[ValueType], ABC, Generic[ValueType]):
 
 
 class Policy:
-    _separators: Optional[Tuple[str]]
-
     def __init__(
         self,
-        *directives,
+        *directives: Directive,
         _separators: Optional[Iterable[str]] = None,
     ):
         self._directives = tuple(directives)
@@ -197,16 +196,15 @@ class Policy:
         )
 
     @property
-    def directives(self):
+    def directives(self) -> Tuple[Directive]:
         return self._directives
 
     @property
     def _str_tokens(self):
-        directives_it = iter(self.directives)
-        yield str(next(directives_it))
-        for sep, directive in zip(self._separators, directives_it):
-            yield sep
+        for directive, sep in zip_longest(self.directives, self._separators):
             yield str(directive)
+            if sep is not None:
+                yield sep
 
     @cache
     def __str__(self):

@@ -80,15 +80,19 @@ def directive_from_string(directive_string: str) -> Directive:
 
 def policy_from_string(policy_string: str) -> Policy:
     separators = DIRECTIVE_SEPARATOR.findall(policy_string)
-    tokens = DIRECTIVE_SEPARATOR.split(policy_string)
-    if len(separators) != (len(tokens) - 1):
+    directives = DIRECTIVE_SEPARATOR.split(policy_string)
+    if len(separators) != (len(directives) - 1):
         raise ParsingError(
             "Mismatch in amount of tokens and separators. "
             "Perhaps your policy is not trimmed?"
         )
 
+    # Trailing ';' ...
+    if len(directives[-1]) == 0:
+        directives = directives[:-1]
+
     return Policy(
-        *(directive_from_string(dir) for dir in tokens), _separators=separators
+        *(directive_from_string(dir) for dir in directives), _separators=separators
     )
 
 
