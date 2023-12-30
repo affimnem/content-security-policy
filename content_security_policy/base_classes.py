@@ -17,23 +17,25 @@ from content_security_policy.utils import StrOnClassMeta, kebab_to_snake
 
 class ValueItem(ABC):
     """
-    Base class for "items" in directive values. To clarify the distinction from a directive hash, consider:
-    script-src 'self' http://example.com
-    The hash of this script-src directive is "'self' http://example.com", whereas "'self'" and "http://example.com"
-    are the "items" of the hash.
-    The two are not mutually exclusive. Some items may also be valid values by themselves.
+    Base class for "items" in directive values. To clarify the distinction from a
+    directive value, consider: script-src 'self' http://example.com
+    The value of this script-src directive is "'self' http://example.com",
+    whereas "'self'" and "http://example.com" are the "items" of the value. The two are
+    not mutually exclusive. Some items may also be valid values by themselves.
     """
 
-    # Pattern used to identify these values when parsing
+    # Pattern used to identify item when parsing
     pattern: re.Pattern
-    # hash as string
+    # value as string
     _value: Optional[str]
 
     def __init__(self, value: str, _value: Optional[str] = None):
-        # The arguments are this awkward because all concrete implementations of ValueItem use their first argument
-        # for the "human friendly" construction of values. The kw arg "_value" is then used to create values from
-        # strings. Both are included here so the type-checker recognizes that all ValueItem constructors accept the
-        # _value kw_arg.
+        # The arguments are this awkward because all concrete implementations of
+        # ValueItem use their first argument for the "human friendly" construction of
+        # values. The kw arg "_value" is then used to create values from strings.
+        # (i.e. when parsing)
+        # Both are included here so the type-checker recognizes that all ValueItem
+        # constructors accept the _value kw_arg.
         self._value = value or _value
 
     def __str__(self):
@@ -43,8 +45,9 @@ class ValueItem(ABC):
     def from_string(cls: Type[SelfType], str_value: str) -> SelfType:
         """
         Return an instance of the class from a string value using the `_value` kwarg.
-        Note that __init__ on subclasses of ValueItem MUST Ignore any other arguments if _value is passed.
-        ValueItem subclasses MUST override this method if their __init__ has a different argument structure.
+        Note that __init__ on subclasses of ValueItem MUST Ignore any other arguments if
+         _value is passed. ValueItem subclasses MUST override this method if
+         their __init__ has a different argument structure.
         :param str_value: value to pass to _value.
         :return: Instance of the class.
         """
@@ -59,7 +62,8 @@ class ClassAsValue(ValueItem, metaclass=StrOnClassMeta):
         return self._value
 
 
-# Some classes for directive values are valid items themselves, use this to cover both in type hints
+# Some classes for directive values are valid items themselves, use this to cover both
+# in type hints
 ValueItemType = Union[ValueItem, Type[ValueItem]]
 
 SelfType = TypeVar("SelfType", bound="Directive")
@@ -177,7 +181,8 @@ class SingleValueDirective(Directive[ValueType], ABC, Generic[ValueType]):
     """
 
     # __init__ still allows for multiple values to be passed to enable lenient parsing.
-    # TODO: When implementing is_valid, do not forget to check whether there is more than one value!
+    # TODO: When implementing is_valid, do not forget to check whether there is more
+    #   than one value!
     def __init__(self, *values, **kwargs):
         super().__init__(*values, **kwargs)
 
@@ -222,9 +227,12 @@ class Policy:
     @cache
     def __getitem__(self, key: Union[Type[Directive], int, str]) -> Directive:
         """
-        Get a directive of the policy. If key is an int, the key-th directive in the policy is returned.
-        If key is a string or a Directive type, the FIRST directive of that type is returned.
-        String keys are case-insensitive and support both PascalCase and kebab-case (e.g. ScriptSrc and script-src)
+        Get a directive of the policy. If key is an int, the key-th directive in the
+        policy is returned.
+        If key is a string or a directive type, the FIRST directive of that type is
+        returned. (Because it is the "effective" one)
+        String keys are case-insensitive and support both PascalCase and kebab-case
+        (e.g. ScriptSrc and script-src)
         :param key: selector for directive.
         :return: The selected directive.
         """
@@ -235,7 +243,8 @@ class Policy:
             key = Directive.class_by_name(key)
         elif not issubclass(key, Directive):
             raise TypeError(
-                f"Item must be either an int, a string or a subclass of {Directive.__name__}, not {type(key)}"
+                "Item must be either an int, a string or a subclass of "
+                f"{Directive.__name__}, not {type(key)}"
             )
 
         for directive in self.directives:
