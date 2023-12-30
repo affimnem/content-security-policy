@@ -1,12 +1,18 @@
-__all__ = ["value_item_from_string", "directive_from_string", "policy_from_string"]
+__all__ = [
+    "value_item_from_string",
+    "directive_from_string",
+    "policy_from_string",
+    "policy_list_from_string",
+]
 
 from typing import *
+
 from content_security_policy import *
-from content_security_policy.exceptions import ParsingError, NoSuchDirective
+from content_security_policy.exceptions import NoSuchDirective, ParsingError
 from content_security_policy.patterns import (
-    VALUE_ITEM_SEPARATOR,
     DIRECTIVE_SEPARATOR,
     POLICY_SEPARATOR,
+    VALUE_ITEM_SEPARATOR,
     WHITESPACE_HEAD,
 )
 
@@ -25,6 +31,12 @@ _PARSING_RULES: Dict[Type[Directive], Tuple[Type[ValueItem]]] = {
     FrameAncestors: (NoneSrc, SelfSrc, HostSrc, SchemeSrc),
     ReportUri: (UriReference,),
     ReportTo: (ReportToValue,),
+    RequireTrustedTypesFor: (TrustedTypesSinkGroup,),
+    TrustedTypes: (
+        TrustedTypesWildcard,
+        TrustedTypesKeyword,
+        TrustedTypesPolicyName,
+    ),
 }
 
 
@@ -32,22 +44,19 @@ def value_item_from_string(
     value_string: str, directive_type: Type[Directive]
 ) -> ValueItemType:
     """
-    Create a directive hash object from a string.
+    Create a directive value object from a string.
     :param value_string: Directive hash (without whitespace!)
-    :param directive_type: Directive which has hash, needed to distinguish certain hash types.
+    :param directive_type: Directive which has value, needed to distinguish certain hash types.
     :return: Object representing the hash.
     """
     for d_type, value_types in _PARSING_RULES.items():
-        try:
-            if issubclass(directive_type, d_type):
-                for v_type in value_types:
-                    if v_type.pattern.fullmatch(value_string):
-                        v_type = cast(Type[ValueItem], v_type)
-                        return v_type.from_string(value_string)
+        if issubclass(directive_type, d_type):
+            for v_type in value_types:
+                if v_type.pattern.fullmatch(value_string):
+                    v_type = cast(Type[ValueItem], v_type)
+                    return v_type.from_string(value_string)
 
-                return UnrecognizedValueItem(value_string)
-        except Exception as e:
-            print(e)
+            return UnrecognizedValueItem(value_string)
 
     raise ValueError(
         f"Failed to find parsing rules for directive type {directive_type}"

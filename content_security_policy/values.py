@@ -23,6 +23,10 @@ __all__ = [
     "UriReference",
     "ReportUriValue",
     "UnrecognizedValueItem",
+    "TrustedTypesSinkGroup",
+    "TrustedTypesPolicyName",
+    "TrustedTypesWildcard",
+    "TrustedTypesKeyword",
 ]
 
 from abc import ABC
@@ -41,25 +45,26 @@ from content_security_policy.constants import (
     NONE,
     SANDBOX_VALUES,
     SELF,
+    TRUSTED_TYPES_KEYWORD_VALUES,
+    TRUSTED_TYPES_SINK_GROUP_VALUES,
     WEBRTC_VALUES,
+    WILDCARD,
 )
 from content_security_policy.exceptions import BadDirectiveValue, BadSourceExpression
 from content_security_policy.patterns import (
     BASE64_VALUE,
     HASH_SOURCE,
     HOST_SOURCE,
-    # Appending _RE, so they are easier to distinguish from the constants
-    KEYWORD_SOURCE as KEYWORD_SOURCE_RE,
     NONCE_SOURCE,
     NONE_SOURCE,
     NOT_SEPARATOR,
-    SANDBOX_VALUE as SANDBOX_VALUE_RE,
     SCHEME,
     SCHEME_SOURCE,
     SELF_SOURCE,
     TOKEN,
+    TRUSTED_TYPES_POLICY_NAME,
     URI_REFERENCE,
-    WEBRTC_VALUE as WEBRTC_VALUE_RE,
+    WILDCARD as WILDCARD_RE,
 )
 from content_security_policy.utils import KeywordMixin
 
@@ -314,3 +319,54 @@ ReportUriValue = Tuple[UriReference]
 
 class UnrecognizedValueItem(ValueItem):
     pattern = NOT_SEPARATOR
+
+
+class TrustedTypesSinkGroup(KeywordMixin, ValueItem):
+    script = cast("TrustedTypesSinkGroup", "'script'")
+    _keywords = TRUSTED_TYPES_SINK_GROUP_VALUES
+
+    def __init__(self, value: str, _value: Optional[str] = None):
+        if _value is not None:
+            value = _value
+        elif not self.pattern.fullmatch(value):
+            raise BadDirectiveValue(f"{value} does not match {self.pattern.pattern}")
+        super().__init__(value)
+
+
+class TrustedTypesExpression(ValueItem, ABC):
+    """
+    Base class for all tt expressions.
+    """
+
+
+class TrustedTypesPolicyName(TrustedTypesExpression):
+    pattern = TRUSTED_TYPES_POLICY_NAME
+
+    def __init__(self, value: str, _value: Optional[str] = None):
+        if _value is not None:
+            value = _value
+        else:
+            if not TRUSTED_TYPES_POLICY_NAME.fullmatch(value):
+                raise BadSourceExpression(
+                    f"TT policy name '{value}' does not match"
+                    f" {TRUSTED_TYPES_POLICY_NAME.pattern.pattern}"
+                )
+        super().__init__(value)
+
+
+class TrustedTypesWildcard(TrustedTypesExpression, SingleValueItem):
+    pattern = WILDCARD_RE
+    _value = WILDCARD
+
+
+class TrustedTypesKeyword(KeywordMixin, TrustedTypesExpression):
+    allow_duplicates = cast("TrustedTypesKeyword", "'allow-duplicates'")
+    none = cast("TrustedTypesKeyword", "'none'")
+    _keywords = TRUSTED_TYPES_KEYWORD_VALUES
+
+    def __init__(self, value: str, _value: Optional[str] = None):
+        if _value is not None:
+            value = _value
+        elif not self.pattern.fullmatch(value):
+            raise BadDirectiveValue(f"{value} does not match {self.pattern.pattern}")
+        super().__init__(value)

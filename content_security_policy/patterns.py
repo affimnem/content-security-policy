@@ -9,7 +9,6 @@ __all__ = [
     "NONE_SOURCE",
     "SELF_SOURCE",
     "URI_REFERENCE",
-    "KEYWORD_SOURCE",
     "WEBRTC_VALUE",
     "SANDBOX_VALUE",
     "ASCII_WHITESPACE",
@@ -18,6 +17,8 @@ __all__ = [
     "DIRECTIVE_SEPARATOR",
     "POLICY_SEPARATOR",
     "WHITESPACE_HEAD",
+    "TRUSTED_TYPES_POLICY_NAME",
+    "WILDCARD",
 ]
 # These expressions will be compiled with re.IGNORECASE
 __case_insensitive__ = {
@@ -26,6 +27,9 @@ __case_insensitive__ = {
     "HASH-SOURCE",
     "NONE_SOURCE",
     "SELF_SOURCE",
+    "TRUSTED_TYPES_SINK_GROUP",
+    "TRUSTED_TYPES_KEYWORD",
+    "TRUSTED_TYPES_POLICY_NAME",
 }
 
 import re
@@ -33,7 +37,6 @@ from typing import cast
 
 from content_security_policy.constants import (
     HASH_ALGORITHMS,
-    KEYWORD_SOURCES,
     NONE,
     SANDBOX_VALUES,
     SELF,
@@ -59,7 +62,8 @@ TOKEN = cast(re.Pattern, f"({TOKEN_CHAR})+")
 UNRESERVED = f"({ALPHA}|{DIGIT}|[-._~])"
 HEXDIG = "[0-9a-fA-F]"
 PCT_ENCODED = f"%{HEXDIG}{HEXDIG}"
-# Deviating from rfc3986 here, since CSP explicitly excludes ";" and "," from ALL directive values:
+# Deviating from rfc3986 here, since CSP explicitly excludes ";" and "," from ALL
+# directive values:
 # https://w3c.github.io/webappsec-csp/#framework-directives
 SUB_DELIMS = "[!$&'()*+=]"
 PCHAR = f"({UNRESERVED}|{PCT_ENCODED}|{SUB_DELIMS}|@|:)"
@@ -114,7 +118,6 @@ HOST_SOURCE = cast(
     re.Pattern, f"({SCHEME_PART}://)?{HOST_PART}(:{PORT_PART})?({PATH_PART})?"
 )
 # https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
-KEYWORD_SOURCE = cast(re.Pattern, "|".join(KEYWORD_SOURCES))
 NONE_SOURCE = cast(re.Pattern, NONE)
 
 # https://w3c.github.io/webappsec-csp/#grammardef-ancestor-source-list
@@ -138,7 +141,13 @@ POLICY_SEPARATOR = cast(re.Pattern, f"{ASCII_WHITESPACE}*,{ASCII_WHITESPACE}*")
 NOT_SEPARATOR = cast(re.Pattern, f"[^{WHITESPACE_CHARS};,]*")
 WHITESPACE_HEAD = re.compile(f"^{ASCII_WHITESPACE}*", flags=re.MULTILINE)
 
-# workaround for the "want to reuse patters but also want to precompile them"-problem
+WILDCARD = cast(re.Pattern, r"\*")
+TRUSTED_TYPES_POLICY_NAME = cast(re.Pattern, rf"({ALPHA}|{DIGIT}|-|[\-#=_/@.%])+")
+
+# Workaround for the "want to reuse patters but also want to precompile them"-problem
+# Define the patterns as strings, compose them as desired
+# Compile them at the end of the module
+# Cast all of them to for type-checks
 for name in __all__:
     pat = locals()[name]
     if isinstance(pat, re.Pattern):

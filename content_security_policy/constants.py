@@ -20,6 +20,7 @@ DOCUMENT_DIRECTIVE_NAMES = ("base-uri", "sandbox")
 NAVIGATION_DIRECTIVE_NAMES = ("form-action", "frame-ancestors")
 REPORTING_DIRECTIVE_NAMES = ("report-uri", "report-to")
 OTHER_DIRECTIVE_NAMES = ("webrtc", "worker-src")
+TT_DIRECTIVES = ("trusted-types", "require-trusted-types-for")
 
 DIRECTIVE_NAMES = (
     FETCH_DIRECTIVE_NAMES
@@ -27,9 +28,10 @@ DIRECTIVE_NAMES = (
     + NAVIGATION_DIRECTIVE_NAMES
     + REPORTING_DIRECTIVE_NAMES
     + OTHER_DIRECTIVE_NAMES
+    + TT_DIRECTIVES
 )
 
-# All these directives have a serialized-source-list as hash
+# All these directives have a serialized-source-list as value
 SOURCE_LIST_DIRECTIVES = FETCH_DIRECTIVE_NAMES + (
     "worker-src",
     "form-action",
@@ -86,6 +88,19 @@ SANDBOX_VALUES = (
     "allow-top-navigation-by-user-activation",
     "allow-top-navigation-to-custom-protocols",
 )
+
+# https://w3c.github.io/trusted-types/dist/spec/#require-trusted-types-for-csp-directive
+TRUSTED_TYPES_SINK_GROUP_VALUES = [
+    "'script'",
+]
+
+# https://w3c.github.io/trusted-types/tt_config/spec/#trusted-types-csp-directive
+TRUSTED_TYPES_KEYWORD_VALUES = [
+    "'allow-duplicates'",
+    "'none'",
+]
+
+WILDCARD = "*"
 
 CSP_HEADER = "Content-Security-Policy"
 CSP_RO_HEADER = "Content-Security-Policy-Report-Only"

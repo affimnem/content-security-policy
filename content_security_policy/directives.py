@@ -1,6 +1,6 @@
 """
-Actual directives, I would have loved to generate these classes dynamically, but then autocompletion tools won't
-properly pick up on them.
+Actual directives, I would have loved to generate these classes dynamically, but then
+autocompletion tools won't properly pick up on them.
 """
 __all__ = [
     "SourceListDirective",
@@ -27,24 +27,40 @@ __all__ = [
     "ReportTo",
     "Webrtc",
     "WorkerSrc",
+    "TrustedTypes",
+    "RequireTrustedTypesFor",
     "UnrecognizedDirective",
 ]
 
 from abc import ABC
 from typing import Optional, Union
 
-from content_security_policy.base_classes import (Directive, SelfType, SingleValueDirective)
+from content_security_policy.base_classes import (
+    Directive,
+    SelfType,
+    SingleValueDirective,
+)
 from content_security_policy.exceptions import (
     BadDirectiveValue,
     BadSourceList,
 )
-from content_security_policy.values import (AncestorSource, AncestorSourceList, NoneSrc, NoneSrcType, ReportToValue,
-                                            ReportUriValue, SandboxValue, SourceExpression, SourceList,
-                                            UnrecognizedValueItem)
+from content_security_policy.values import (
+    AncestorSource,
+    AncestorSourceList,
+    NoneSrc,
+    NoneSrcType,
+    ReportToValue,
+    ReportUriValue,
+    SandboxValue,
+    SourceExpression,
+    SourceList,
+    TrustedTypesSinkGroup,
+    UnrecognizedValueItem,
+)
 
 
-# This is not called FetchDirective because not all directives accepting a Source List are categorised as
-# Fetch Directives by the spec (worker-src, base-uri, form-action)
+# This is not called FetchDirective because not all directives accepting a Source List
+# are categorised as Fetch Directives by the spec (worker-src, base-uri, form-action)
 class SourceListDirective(Directive[SourceList], ABC):
     """
     A directive whose hash is a
@@ -167,6 +183,14 @@ class ReportUri(Directive[ReportUriValue]):
 
 class ReportTo(SingleValueDirective[ReportToValue]):
     _name = "report-to"
+
+
+class RequireTrustedTypesFor(Directive[TrustedTypesSinkGroup]):
+    _name = "require-trusted-types-for"
+
+
+class TrustedTypes(Directive[TrustedTypesSinkGroup]):
+    _name = "trusted-types"
 
 
 class UnrecognizedDirective(Directive[UnrecognizedValueItem]):
