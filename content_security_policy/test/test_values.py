@@ -1,8 +1,16 @@
+from itertools import chain
 from unittest import TestCase
 
-from content_security_policy.values import KeywordSource, NoneSrc
 from content_security_policy.constants import KEYWORD_SOURCES, NONE
+from content_security_policy.parse import _PARSING_RULES
 from content_security_policy.utils import kebab_to_snake
+from content_security_policy.values import KeywordSource, NoneSrc
+
+
+class ValueCompleteness(TestCase):
+    def test_all_values_have_pattern(self):
+        for value_type in chain(*_PARSING_RULES.values()):
+            self.assertTrue(hasattr(value_type, "pattern"))
 
 
 class KeywordSourceAttributes(TestCase):

@@ -61,7 +61,7 @@ from content_security_policy.patterns import (
     URI_REFERENCE,
     WEBRTC_VALUE as WEBRTC_VALUE_RE,
 )
-from content_security_policy.utils import AutoInstanceMixin
+from content_security_policy.utils import KeywordMixin
 
 
 class SourceExpression(ValueItem, ABC):
@@ -154,9 +154,7 @@ class HostSrc(SourceExpression):
 
 
 # https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
-class KeywordSource(AutoInstanceMixin, SourceExpression):
-    pattern = KEYWORD_SOURCE_RE
-
+class KeywordSource(KeywordMixin, SourceExpression):
     # You can later get an instance of any hash source by accessing these as class attributes
     # They are spelled out explicitly here so type hints work
     self = cast("KeywordSource", "'self'")
@@ -167,7 +165,7 @@ class KeywordSource(AutoInstanceMixin, SourceExpression):
     report_sample = cast("KeywordSource", "'report-sample'")
     unsafe_allow_redirects = cast("KeywordSource", "'unsafe-allow-redirects'")
     wasm_unsafe_eval = cast("KeywordSource", "'wasm-unsafe-eval'")
-    _auto_instance_prop = KEYWORD_SOURCES
+    _keywords = KEYWORD_SOURCES
 
     def __init__(self, keyword: str, _value: Optional[str] = None):
         if _value is not None:
@@ -213,12 +211,12 @@ NoneSrcType = Union[NoneSrc, Type[NoneSrc]]
 SourceList = Union[Tuple[SourceExpression], NoneSrcType]
 
 
-class WebrtcValue(AutoInstanceMixin, ValueItem):
+class WebrtcValue(KeywordMixin, ValueItem):
     # You can later get an instance of any hash by accessing these as class attributes
     # They are spelled out explicitly here so type hints work
     allow = cast("WebrtcValue", "'allow'")
     block = cast("WebrtcValue", "'block'")
-    _auto_instance_prop = WEBRTC_VALUES
+    _keywords = WEBRTC_VALUES
 
     def __init__(self, value: str, _value: Optional[str] = None):
         if _value is not None:
@@ -226,17 +224,16 @@ class WebrtcValue(AutoInstanceMixin, ValueItem):
         else:
             no_ticks_keyword = value.strip("'")
             value = f"'{no_ticks_keyword}'"
-            if not WEBRTC_VALUE_RE.fullmatch(value):
+            if not self.pattern.fullmatch(value):
                 raise BadSourceExpression(
-                    f"{value} does not match {KEYWORD_SOURCE_RE.pattern.pattern}"
+                    f"{value} does not match {self.pattern.pattern}"
                 )
-
-        super().__init__(_value)
+        super().__init__(value)
 
 
 # https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-elemet
-class SandboxToken(AutoInstanceMixin, ValueItem):
-    # You can later get an instance of any hash by accessing these as class attributes
+class SandboxToken(KeywordMixin, ValueItem):
+    # You can later get an instance of any token by accessing these as class attributes
     # They are spelled out explicitly here so type hints work
     allow_downloads = cast("SandboxToken", "allow-downloads")
     allow_forms = cast("SandboxToken", "allow-forms")
@@ -257,15 +254,13 @@ class SandboxToken(AutoInstanceMixin, ValueItem):
     allow_top_navigation_to_custom_protocols = cast(
         "SandboxToken", "allow-top-navigation-to-custom-protocols"
     )
-    _auto_instance_prop = SANDBOX_VALUES
+    _keywords = SANDBOX_VALUES
 
     def __init__(self, value: str, _value: Optional[str] = None):
         if _value is not None:
             value = _value
-        elif not SANDBOX_VALUE_RE.fullmatch(value):
-            raise BadDirectiveValue(
-                f"{value} does not match {SANDBOX_VALUE_RE.pattern.pattern}"
-            )
+        elif not self.pattern.fullmatch(value):
+            raise BadDirectiveValue(f"{value} does not match {self.pattern.pattern}")
         super().__init__(value)
 
 

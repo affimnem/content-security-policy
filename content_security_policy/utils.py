@@ -1,5 +1,5 @@
 from abc import ABCMeta
-
+import re
 import string
 from typing import Iterable
 
@@ -22,11 +22,11 @@ class StrOnClassMeta(ABCMeta):
         return cls._value
 
 
-class AutoInstanceMixin:
-    _auto_instance_prop: Iterable[str] = tuple()
+class KeywordMixin:
+    _keywords: Iterable[str] = tuple()
 
     def __init_subclass__(cls, **kwargs):
-        for name in cls._auto_instance_prop:
+        for name in cls._keywords:
             prop_name = name.strip("'").replace("-", "_")
 
             @classmethod
@@ -36,5 +36,8 @@ class AutoInstanceMixin:
 
             setattr(cls, prop_name, factory)
 
-        delattr(cls, "_auto_instance_prop")
+        pattern = re.compile("|".join(cls._keywords), flags=re.IGNORECASE)
+        setattr(cls, "pattern", pattern)
+
+        delattr(cls, "_keywords")
         super().__init_subclass__(**kwargs)
