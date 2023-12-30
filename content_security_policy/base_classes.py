@@ -264,6 +264,9 @@ class Policy:
         """
         yield from self.directives
 
+    def __len__(self):
+        return self.directives.__len__()
+
     def __add__(self, other: Directive) -> Policy:
         """
         Add a new directive to the policy.
@@ -313,6 +316,15 @@ class PolicyList:
         )
         self._head = _head
         self._tail = _tail
+
+    def __getitem__(self, *args, **kwargs):
+        return self._policies.__getitem__(*args, **kwargs)
+
+    def __iter__(self):
+        return self._policies.__iter__()
+
+    def __len__(self):
+        return self._policies.__len__()
 
     @property
     def _str_tokens(self):
