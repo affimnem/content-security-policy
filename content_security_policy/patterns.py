@@ -87,7 +87,8 @@ IP_V6_ADDRESS = (
     f"(({H16}){{0,6}}{H16})?::"
 )
 # IP_V_FUTURE = # By the time  this is relevant, I will be dead
-IP_LITERAL = rf"\[{IP_V6_ADDRESS}\]"  # Fixme when I am dead: f"[({IP_V6_ADDRESS})|({IP_V_FUTURE})]"
+# Fixme when I am dead: f"[({IP_V6_ADDRESS})|({IP_V_FUTURE})]"
+IP_LITERAL = rf"\[{IP_V6_ADDRESS}\]"
 REG_NAME = f"({UNRESERVED}|{PCT_ENCODED}|{SUB_DELIMS})*"
 HOST = f"({IP_LITERAL})|({IP_V4_ADDRESS})|({REG_NAME})"
 PORT = f"({DIGIT})*"
@@ -100,7 +101,7 @@ PATH_ROOTLESS = f"{SEGMENT_NZ}(/{SEGMENT})*"
 SEGMENT_NZ_NC = f"({UNRESERVED}|{PCT_ENCODED}|{SUB_DELIMS}|@)+"
 PATH_NOSCHEME = f"{SEGMENT_NZ_NC}(/{SEGMENT})*"
 HIER_PART = f"((//{AUTHORITY}{PATH_AB_EMPTY})|{PATH_ABSOLUTE}|{PATH_ROOTLESS})?"
-URI = rf"{SCHEME}:{HIER_PART}(\?{QUERY})?(#{FRAGMENT})"
+URI = rf"{SCHEME}:{HIER_PART}(\?{QUERY})?(#{FRAGMENT})?"
 RELATIVE_PART = f"((//{AUTHORITY}{PATH_AB_EMPTY})|({PATH_ABSOLUTE})|({PATH_NOSCHEME}))?"
 RELATIVE_REF = rf"({RELATIVE_PART})(\?{QUERY})?(#{FRAGMENT})?"
 URI_REFERENCE = cast(re.Pattern, f"({URI})|({RELATIVE_REF})")
