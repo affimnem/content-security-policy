@@ -270,7 +270,7 @@ class SandboxToken(KeywordMixin, ValueItem):
 
 
 # TODO: Unsure whether I like the Literal[""] here, need to revisit once I work on empty / non-empty directive-values
-SandboxValue = Union[Tuple[SandboxToken], Literal[""]]
+SandboxValue = Union[SandboxToken, Literal[""]]
 
 
 # 'self' is a keyword source expression, but it is also a possible hash for frame-ancestors, whereas other
@@ -314,7 +314,7 @@ class UriReference(ValueItem):
         super().__init__(value)
 
 
-ReportUriValue = Tuple[UriReference]
+ReportUriValue = UriReference
 
 
 class UnrecognizedValueItem(ValueItem):
