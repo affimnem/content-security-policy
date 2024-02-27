@@ -143,7 +143,7 @@ frame_ancestors += HostSrc("https://example.com")
 # Splice frame-ancestors from the policy
 policy -= FrameAncestors
 
-# Adding always appends the directive at the end!  
+# Adding always appends the directive at the end!
 policy += frame_ancestors
 
 # Notice that whitespace and capitalization was preserved!

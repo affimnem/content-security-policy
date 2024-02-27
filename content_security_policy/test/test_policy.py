@@ -1,5 +1,5 @@
-from unittest import TestCase
 from typing import cast
+from unittest import TestCase
 
 from content_security_policy import *
 from content_security_policy.exceptions import NoSuchDirective

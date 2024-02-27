@@ -1,6 +1,6 @@
-from abc import ABCMeta
 import re
 import string
+from abc import ABCMeta
 from typing import Iterable
 
 

@@ -30,11 +30,7 @@ __all__ = [
 from abc import ABC
 from typing import Literal, Optional, Type, Union, cast
 
-from content_security_policy.base_classes import (
-    ClassAsValue,
-    ValueItem,
-    ValueItemType,
-)
+from content_security_policy.base_classes import ClassAsValue, ValueItem, ValueItemType
 from content_security_policy.constants import (
     HASH_ALGORITHMS,
     KEYWORD_SOURCES,
@@ -61,8 +57,8 @@ from content_security_policy.patterns import (
     TOKEN,
     TRUSTED_TYPES_POLICY_NAME,
     URI_REFERENCE,
-    WILDCARD as WILDCARD_RE,
 )
+from content_security_policy.patterns import WILDCARD as WILDCARD_RE
 from content_security_policy.utils import KeywordMixin
 
 

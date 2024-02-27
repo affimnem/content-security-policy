@@ -80,9 +80,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 from content_security_policy.directives import *
-from content_security_policy.values import *
 from content_security_policy.django.auto_src import AutoHostScriptSrc
-
+from content_security_policy.values import *
 
 EXTERNAL_SCRIPTS = (HostSrc("https://code.jquery.com/jquery-3.5.1.js"),)
 

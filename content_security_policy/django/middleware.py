@@ -8,10 +8,7 @@ from django.http.response import HttpResponseBadRequest
 from watchdog.observers import Observer
 
 from content_security_policy import Directive, Policy, PolicyList
-from content_security_policy.constants import (
-    CSP_HEADER,
-    CSP_RO_HEADER,
-)
+from content_security_policy.constants import CSP_HEADER, CSP_RO_HEADER
 from content_security_policy.django.auto_src import AutoSrcDirective
 from content_security_policy.django.constants import CSP_CONFIG_NAME, CSP_RO_CONFIG_NAME
 from content_security_policy.django.utils.settings import get_csp_setting

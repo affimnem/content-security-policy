@@ -6,10 +6,7 @@ __all__ = [
 ]
 
 from content_security_policy.directives import ScriptSrc
-from content_security_policy.django.auto_src.base import (
-    AutoHostSrc,
-    AutoSrcDirective,
-)
+from content_security_policy.django.auto_src.base import AutoHostSrc, AutoSrcDirective
 
 
 class AutoHostScriptSrc(AutoHostSrc):

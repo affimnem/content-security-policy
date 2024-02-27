@@ -1,14 +1,14 @@
 from unittest import TestCase
 
 from content_security_policy import (
-    NoneSrc,
-    KeywordSource,
-    SelfSrc,
-    FrameAncestors,
     Directive,
+    FrameAncestors,
+    KeywordSource,
+    NoneSrc,
+    SelfSrc,
 )
 from content_security_policy.constants import SOURCE_LIST_DIRECTIVES
-from content_security_policy.exceptions import BadSourceList, BadDirectiveValue
+from content_security_policy.exceptions import BadDirectiveValue, BadSourceList
 
 
 class DoNotCombineNoneSource(TestCase):

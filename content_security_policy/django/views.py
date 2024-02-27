@@ -1,6 +1,5 @@
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpRequest, HttpResponse
 
 
 def simple_page(request: HttpRequest):
     return HttpResponse("Hello World")
-

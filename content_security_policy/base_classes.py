@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import re
 from abc import ABC
 from functools import cache, cached_property
 from itertools import zip_longest
-import re
 from typing import (
     Any,
     Dict,
