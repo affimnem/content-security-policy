@@ -37,7 +37,6 @@ from typing import Optional, Union
 
 from content_security_policy.base_classes import (
     Directive,
-    SelfType,
     SingleValueDirective,
 )
 from content_security_policy.exceptions import (
@@ -46,14 +45,12 @@ from content_security_policy.exceptions import (
 )
 from content_security_policy.values import (
     AncestorSource,
-    AncestorSourceList,
     NoneSrc,
     NoneSrcType,
     ReportToValue,
     ReportUriValue,
     SandboxValue,
     SourceExpression,
-    SourceList,
     TrustedTypesSinkGroup,
     UnrecognizedValueItem,
 )
@@ -61,20 +58,21 @@ from content_security_policy.values import (
 
 # This is not called FetchDirective because not all directives accepting a Source List
 # are categorised as Fetch Directives by the spec (worker-src, base-uri, form-action)
-class SourceListDirective(Directive[SourceList], ABC):
+class SourceListDirective(Directive[SourceExpression], ABC):
     """
     A directive whose hash is a
     """
 
-    def __init__(self, *sources: Union[SourceExpression, NoneSrcType], **kwargs):
+    def __init__(self, *sources, **kwargs):
+        # https://w3c.github.io/webappsec-csp/#grammardef-serialized-source-list
         if len(sources) > 1 and any(src == NoneSrc for src in sources):
             raise BadSourceList(
                 f"{NoneSrc} may not be combined with other source expressions."
             )
         super().__init__(*sources, **kwargs)
 
-    def __add__(self: SelfType, other: SourceExpression) -> SelfType:
-        return type(self)(*self.values, other, name=self._name)
+    def __add__(self, other):
+        return type(self)(*self.values, other, _name=self._name)
 
 
 # Fetch Directives
@@ -139,7 +137,7 @@ class StyleSrcAttr(SourceListDirective):
 
 
 # Other directives
-class Webrtc(SingleValueDirective[SourceList]):
+class Webrtc(SingleValueDirective[SourceExpression]):
     _name = "webrtc"
 
 
@@ -161,7 +159,7 @@ class FormAction(SourceListDirective):
     _name = "form-action"
 
 
-class FrameAncestors(Directive[AncestorSourceList]):
+class FrameAncestors(Directive[AncestorSource]):
     _name = "frame-ancestors"
 
     def __init__(self, *sources: Union[AncestorSource, NoneSrcType], **kwargs):

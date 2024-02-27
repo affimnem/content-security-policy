@@ -29,8 +29,8 @@ class KeywordMixin:
         for name in cls._keywords:
             prop_name = name.strip("'").replace("-", "_")
 
-            @classmethod
-            @property
+            @classmethod  # type: ignore
+            @property  # type: ignore
             def factory(cls, sneak_me=name):
                 return cls(sneak_me)
 

@@ -16,7 +16,7 @@ SECRET_KEY = "django-insecure-t-3nx1^9ves=v(0+2sg)#lo3u^6m&)7pydi-vnf(8z)2s7x0lg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = []  # type: ignore
 
 # Application definition
 
@@ -84,7 +84,7 @@ from content_security_policy.values import *
 from content_security_policy.django.auto_src import AutoHostScriptSrc
 
 
-EXTERNAL_SCRIPTS = [HostSrc("https://code.jquery.com/jquery-3.5.1.js")]
+EXTERNAL_SCRIPTS = (HostSrc("https://code.jquery.com/jquery-3.5.1.js"),)
 
 CONTENT_SECURITY_POLICY = [
     AutoHostScriptSrc(*EXTERNAL_SCRIPTS, watch_apps=INSTALLED_APPS),

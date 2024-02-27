@@ -13,6 +13,8 @@ watchdog = { version = "^3.0.0", optional = true }
 black = "^23.3.0"
 django = "^4.2.5"
 coverage = "^7.3.2"
+mypy = "1.7"
+django-stubs = { extras = ["compatible-mypy"], version = "^4.2.7" }
 
 [tool.poetry.extras]
 django = ["watchdog"]
@@ -27,3 +29,7 @@ omit = [
     "content_security_policy/django/utils/__init__.py",
     "content_security_policy/django/*_settings.py",
 ]
+
+[tool.mypy]
+files = "./content_security_policy"
+check_untyped_defs = true

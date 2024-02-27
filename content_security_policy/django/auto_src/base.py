@@ -14,6 +14,7 @@ from watchdog.events import (
     FileSystemEventHandler,
 )
 
+from content_security_policy import ValueItemType
 from content_security_policy.directives import Directive
 from content_security_policy.django.exceptions import ValuesMissing
 from content_security_policy.values import HostSrc, SourceExpression
@@ -21,7 +22,7 @@ from content_security_policy.values import HostSrc, SourceExpression
 SRC_HASH_FUN = "sha384"
 
 
-def fill_render_args(*argnames: str, optional: List[str] = None):
+def fill_render_args(*argnames: str, optional: List[str] | None = None):
     """
     Decorator that overrides kwargs for render with equally named instance attributes.
     """
@@ -73,13 +74,16 @@ def init_before_first_render(render_func):
 
 
 DirectiveType = TypeVar("DirectiveType", bound=Directive)
+
 # This is not bound to ValueItem, because you may have to defer creating an actual
 # ValueItem until render
-DynamicValueType = TypeVar("DynamicValueType")
+IntermediateValueType = TypeVar("IntermediateValueType")
 
 
 class AutoSrcDirective(
-    FileSystemEventHandler, Generic[DirectiveType, DynamicValueType], metaclass=ABCMeta
+    FileSystemEventHandler,
+    Generic[DirectiveType, IntermediateValueType],
+    metaclass=ABCMeta,
 ):
     """
     Automatically generates a -src directive from a list of source static_values and
@@ -100,14 +104,14 @@ class AutoSrcDirective(
 
     @property
     @abstractmethod
-    def directive(self) -> Type[Directive]:
+    def directive(self) -> Type[DirectiveType]:
         """
         Directive class to render.
         """
         ...
 
     @abstractmethod
-    def compute_value_item(self, path: Path) -> DynamicValueType:
+    def compute_value_item(self, path: Path) -> IntermediateValueType:
         """
         Compute a directive value item to allow-list a local file.
         """
@@ -115,7 +119,7 @@ class AutoSrcDirective(
 
     def __init__(
         self,
-        *static_values: Tuple[SourceExpression],
+        *static_values: SourceExpression,
         use_self_keyword: bool = False,
         watch_dirs: List[Path | str] | None = None,
         watch_apps: List[str] | None = None,
@@ -126,10 +130,10 @@ class AutoSrcDirective(
         self._watch_apps = watch_apps or []
 
         # Computing values for files is deferred until the first render,
-        # because you might need django to be fully started up to compute anyting
+        # because you might need django to be fully started up to compute anything
         # E.g.: AutoHostSrc calls django.templatetags.static.static, which can only be
         # called once django is fully up. See self.init_files.
-        self.files: Dict[Path, DynamicValueType] = {}
+        self.files: Dict[Path, IntermediateValueType] = {}
 
     @property
     def name(self):
@@ -194,8 +198,10 @@ class AutoSrcDirective(
     @init_before_first_render
     def render(self, **kwargs) -> DirectiveType:
         # Sorting to avoid non-deterministic tests
-        values = sorted(self.files.values())
-        return self.directive(*self.static_values, values)
+        items = sorted(self.files.items())
+        # Default implementation assumes that compute_value_item returns ValueItemType
+        values = cast(Tuple[ValueItemType, ...], tuple(v for p, v in items))
+        return self.directive(*self.static_values, *values)
 
 
 class AutoHostSrc(AutoSrcDirective[DirectiveType, str], metaclass=ABCMeta):
@@ -207,7 +213,7 @@ class AutoHostSrc(AutoSrcDirective[DirectiveType, str], metaclass=ABCMeta):
 
     def __init__(
         self,
-        *static_values: Tuple[SourceExpression],
+        *static_values: SourceExpression,
         scheme: Optional[str] = None,
         host: Optional[str] = None,
         port: Optional[int] = None,
@@ -242,8 +248,8 @@ class AutoHostSrc(AutoSrcDirective[DirectiveType, str], metaclass=ABCMeta):
         **kwargs,
     ) -> DirectiveType:
         if scheme is None or host is None:
-            missing = {"scheme": scheme, "host": host}
-            missing = [k for k, v in missing.items() if v is None]
+            maybe_missing = {"scheme": scheme, "host": host}
+            missing = [k for k, v in maybe_missing.items() if v is None]
             raise ValuesMissing(
                 f"Attempted to render urls for {self.name}, but some "
                 f"required value(s) where neither found on the directives attributes "
@@ -257,6 +263,8 @@ class AutoHostSrc(AutoSrcDirective[DirectiveType, str], metaclass=ABCMeta):
             origin = f"{origin}:{port}"
 
         # Sorting to avoid non-deterministic tests
+
+        # TODO: sort by path instead of value
         paths = sorted(self.files.values())
         dynamic = [HostSrc(f"{origin}{path}") for path in paths]
 

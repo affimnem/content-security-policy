@@ -9,14 +9,12 @@ __all__ = [
     "HostSrc",
     "KeywordSource",
     "SourceExpression",
-    "SourceList",
     "WebrtcValue",
     "NoneSrc",
     "NoneSrcType",
     "SelfSrc",
     "SelfSrcType",
     "AncestorSource",
-    "AncestorSourceList",
     "SandboxToken",
     "SandboxValue",
     "ReportToValue",
@@ -30,11 +28,10 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import Literal, Optional, Tuple, Type, Union, cast
+from typing import Literal, Optional, Type, Union, cast
 
 from content_security_policy.base_classes import (
     ClassAsValue,
-    SelfType,
     ValueItem,
     ValueItemType,
 )
@@ -193,12 +190,14 @@ class SingleValueItem(ClassAsValue, ValueItem, ABC):
     Because they are case-insensitive, there still is a constructor for lenient parsing.
     """
 
+    _value: str
+
     def __init__(self, *, _value: Optional[str] = None):
         value = _value or self._value
         super().__init__(value)
 
     @classmethod
-    def from_string(cls: Type[SelfType], value: str) -> SelfType:
+    def from_string(cls, value: str):
         return cls(_value=value)
 
 
@@ -211,9 +210,6 @@ class NoneSrc(SingleValueItem):
 
 # Can be passed as class or an instance
 NoneSrcType = Union[NoneSrc, Type[NoneSrc]]
-
-# https://w3c.github.io/webappsec-csp/#grammardef-serialized-source-list
-SourceList = Union[Tuple[SourceExpression], NoneSrcType]
 
 
 class WebrtcValue(KeywordMixin, ValueItem):
@@ -284,8 +280,7 @@ class SelfSrc(SingleValueItem):
 SelfSrcType = Union[SelfSrc, Type[SelfSrc]]
 
 # https://w3c.github.io/webappsec-csp/#grammardef-ancestor-source-list
-AncestorSource = Union[SchemeSrc, HostSrc, SelfSrcType]
-AncestorSourceList = Union[Tuple[AncestorSource], NoneSrcType]
+AncestorSource = SchemeSrc | HostSrc | SelfSrcType | NoneSrcType
 
 
 # https://w3c.github.io/webappsec-csp/#directive-report-to

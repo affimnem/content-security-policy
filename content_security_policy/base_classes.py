@@ -4,7 +4,19 @@ from abc import ABC
 from functools import cache, cached_property
 from itertools import zip_longest
 import re
-from typing import Any, Dict, Generic, Iterable, Optional, Tuple, Type, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    Iterable,
+    Literal,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from content_security_policy.constants import (
     DEFAULT_DIRECTIVE_SEPARATOR,
@@ -42,7 +54,7 @@ class ValueItem(ABC):
         return self._value
 
     @classmethod
-    def from_string(cls: Type[SelfType], str_value: str) -> SelfType:
+    def from_string(cls, str_value: str):
         """
         Return an instance of the class from a string value using the `_value` kwarg.
         Note that __init__ on subclasses of ValueItem MUST Ignore any other arguments if
@@ -62,9 +74,9 @@ class ClassAsValue(ValueItem, metaclass=StrOnClassMeta):
         return self._value
 
 
-# Some classes for directive values are valid items themselves, use this to cover both
-# in type hints
-ValueItemType = Union[ValueItem, Type[ValueItem]]
+# Some classes for directive values are valid items themselves and there is
+# the sandbox directive for which the empty string is a valid value
+ValueItemType = ValueItem | Type[ValueItem] | Literal[""]
 
 SelfType = TypeVar("SelfType", bound="Directive")
 ValueType = TypeVar("ValueType", bound=ValueItemType)
@@ -73,9 +85,9 @@ _DIRECTIVE_REGISTER: Dict[str, Type[Directive]] = {}
 
 
 class Directive(ABC, Generic[ValueType]):
-    _value: Tuple[ValueType]
-    _name: Optional[str]
-    _separators: Tuple[str]
+    _value: Tuple[ValueType, ...]
+    _name: str
+    _separators: Tuple[str, ...]
 
     def __init__(
         self,
@@ -123,7 +135,7 @@ class Directive(ABC, Generic[ValueType]):
         return self._name
 
     @cached_property
-    def values(self) -> Tuple[ValueType]:
+    def values(self) -> Tuple[ValueType, ...]:
         """
         All values of the directive as a tuple
         :return:
@@ -201,7 +213,7 @@ class Policy:
         )
 
     @property
-    def directives(self) -> Tuple[Directive]:
+    def directives(self) -> Tuple[Directive, ...]:
         return self._directives
 
     @property
@@ -216,7 +228,7 @@ class Policy:
         return "".join(self._str_tokens)
 
     @cache
-    def _get_indices(self, directive_type: Type[Directive]) -> Tuple[int]:
+    def _get_indices(self, directive_type: Type[Directive]) -> Tuple[int, ...]:
         indices = []
         for i, directive in enumerate(self.directives):
             if isinstance(directive, directive_type):
@@ -239,19 +251,24 @@ class Policy:
         if type(key) is int:
             return self.directives[key]
 
+        cls: Type[Directive]
+
         if isinstance(key, str):
-            key = Directive.class_by_name(key)
-        elif not issubclass(key, Directive):
+            cls = Directive.class_by_name(key)
+        else:
+            cls = cast(Type[Directive], key)
+
+        if not issubclass(cls, Directive):
             raise TypeError(
                 "Item must be either an int, a string or a subclass of "
-                f"{Directive.__name__}, not {type(key)}"
+                f"{Directive.__name__}, not {type(cls)}"
             )
 
         for directive in self.directives:
-            if isinstance(directive, key):
+            if isinstance(directive, cls):
                 return directive
 
-        raise IndexError(f"Policy does not have a {key.__name__} directive.")
+        raise IndexError(f"Policy does not have a {cls.__name__} directive.")
 
     def __getattr__(self, name: str) -> Any:
         """
@@ -307,8 +324,8 @@ class Policy:
 
 
 class PolicyList:
-    _policies: Tuple[Policy]
-    _separators: Tuple[str]
+    _policies: Tuple[Policy, ...]
+    _separators: Tuple[str, ...]
 
     def __init__(
         self,

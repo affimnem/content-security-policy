@@ -16,7 +16,7 @@ from content_security_policy.patterns import (
     WHITESPACE_HEAD,
 )
 
-_PARSING_RULES: Dict[Type[Directive], Tuple[Type[ValueItem]]] = {
+_PARSING_RULES: Dict[Type[Directive], Tuple[Type[ValueItem], ...]] = {
     UnrecognizedDirective: tuple(),
     SourceListDirective: (
         NoneSrc,
@@ -106,12 +106,14 @@ def policy_from_string(policy_string: str) -> Policy:
 
 
 def policy_list_from_string(policy_list_string: str) -> PolicyList:
-    head = WHITESPACE_HEAD.match(policy_list_string).group(0)
+    head_match = cast(Match, WHITESPACE_HEAD.match(policy_list_string))
+    head = head_match.group(0)
     policy_list_string = WHITESPACE_HEAD.sub("", policy_list_string)
 
     # I have given up on a regex replace for trailing whitespace...
     policy_list_string = policy_list_string[::-1]
-    tail = WHITESPACE_HEAD.match(policy_list_string).group(0)[::-1]
+    tail_match = cast(Match, WHITESPACE_HEAD.match(policy_list_string))
+    tail = tail_match.group(0)[::-1]
     policy_list_string = WHITESPACE_HEAD.sub("", policy_list_string)
     policy_list_string = policy_list_string[::-1]
 

@@ -102,8 +102,8 @@ class Command(BaseCommand):
 
         if errors:
             message = "Your CSP can not be rendered.\n"
-            for directive, e in errors:
-                miss_names = ", ".join(e.names)
+            for directive, err in errors:
+                miss_names = ", ".join(err.names)
                 message += (
                     f"Directive {directive.name} is missing values "
                     f"for: {miss_names}.\n"

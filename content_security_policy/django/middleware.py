@@ -53,9 +53,10 @@ class AutoCSPMiddleware:
                 for directive in policy:
                     if isinstance(directive, AutoSrcDirective):
                         try:
-                            observer = self.observer
+                            # Typing is broken in watchdog
+                            observer = self.observer  # type: ignore
                         except AttributeError:
-                            observer = self.observer = Observer()
+                            observer = self.observer = Observer()  # type: ignore
                         for path in directive.watch_dirs:
                             observer.schedule(directive, path, recursive=True)
 
