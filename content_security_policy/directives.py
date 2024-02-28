@@ -45,6 +45,7 @@ from content_security_policy.values import (
     ReportUriValue,
     SandboxValue,
     SourceExpression,
+    TrustedTypesExpression,
     TrustedTypesSinkGroup,
     UnrecognizedValueItem,
 )
@@ -181,7 +182,7 @@ class RequireTrustedTypesFor(Directive[TrustedTypesSinkGroup]):
     _name = "require-trusted-types-for"
 
 
-class TrustedTypes(Directive[TrustedTypesSinkGroup]):
+class TrustedTypes(Directive[TrustedTypesExpression]):
     _name = "trusted-types"
 
 

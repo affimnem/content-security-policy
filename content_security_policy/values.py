@@ -22,13 +22,14 @@ __all__ = [
     "ReportUriValue",
     "UnrecognizedValueItem",
     "TrustedTypesSinkGroup",
+    "TrustedTypesExpression",
     "TrustedTypesPolicyName",
     "TrustedTypesWildcard",
     "TrustedTypesKeyword",
 ]
 
 from abc import ABC
-from typing import Literal, Optional, Type, Union, cast
+from typing import Literal, Optional, Type, cast
 
 from content_security_policy.base_classes import ClassAsValue, ValueItem, ValueItemType
 from content_security_policy.constants import (
@@ -205,7 +206,7 @@ class NoneSrc(SingleValueItem):
 
 
 # Can be passed as class or an instance
-NoneSrcType = Union[NoneSrc, Type[NoneSrc]]
+NoneSrcType = NoneSrc | Type[NoneSrc]
 
 
 class WebrtcValue(KeywordMixin, ValueItem):
@@ -261,19 +262,19 @@ class SandboxToken(KeywordMixin, ValueItem):
         super().__init__(value)
 
 
-# TODO: Unsure whether I like the Literal[""] here, need to revisit once I work on empty / non-empty directive-values
-SandboxValue = Union[SandboxToken, Literal[""]]
+SandboxValue = SandboxToken | Literal[""]
 
 
-# 'self' is a keyword source expression, but it is also a possible hash for frame-ancestors, whereas other
-# KeywordSources are not valid static_values for frame-ancestors.
+# 'self' is a keyword source expression, but it is also a possible value for
+# frame-ancestors, whereas other # KeywordSources are not valid values for
+# frame-ancestors.
 class SelfSrc(SingleValueItem):
     pattern = SELF_SOURCE
     _value = SELF
 
 
 # Can be passed as class or an instance
-SelfSrcType = Union[SelfSrc, Type[SelfSrc]]
+SelfSrcType = SelfSrc | Type[SelfSrc]
 
 # https://w3c.github.io/webappsec-csp/#grammardef-ancestor-source-list
 AncestorSource = SchemeSrc | HostSrc | SelfSrcType | NoneSrcType
@@ -308,10 +309,6 @@ class UriReference(ValueItem):
 ReportUriValue = UriReference
 
 
-class UnrecognizedValueItem(ValueItem):
-    pattern = NOT_SEPARATOR
-
-
 class TrustedTypesSinkGroup(KeywordMixin, ValueItem):
     script = cast("TrustedTypesSinkGroup", "'script'")
     _keywords = TRUSTED_TYPES_SINK_GROUP_VALUES
@@ -324,13 +321,7 @@ class TrustedTypesSinkGroup(KeywordMixin, ValueItem):
         super().__init__(value)
 
 
-class TrustedTypesExpression(ValueItem, ABC):
-    """
-    Base class for all tt expressions.
-    """
-
-
-class TrustedTypesPolicyName(TrustedTypesExpression):
+class TrustedTypesPolicyName(ValueItem):
     pattern = TRUSTED_TYPES_POLICY_NAME
 
     def __init__(self, value: str, _value: Optional[str] = None):
@@ -345,12 +336,16 @@ class TrustedTypesPolicyName(TrustedTypesExpression):
         super().__init__(value)
 
 
-class TrustedTypesWildcard(TrustedTypesExpression, SingleValueItem):
+class TrustedTypesWildcard(SingleValueItem):
     pattern = WILDCARD_RE
     _value = WILDCARD
 
 
-class TrustedTypesKeyword(KeywordMixin, TrustedTypesExpression):
+# Can be passed as class or an instance
+TrustedTypesWildcardType = TrustedTypesWildcard | Type[TrustedTypesWildcard]
+
+
+class TrustedTypesKeyword(KeywordMixin, ValueItem):
     allow_duplicates = cast("TrustedTypesKeyword", "'allow-duplicates'")
     none = cast("TrustedTypesKeyword", "'none'")
     _keywords = TRUSTED_TYPES_KEYWORD_VALUES
@@ -361,3 +356,12 @@ class TrustedTypesKeyword(KeywordMixin, TrustedTypesExpression):
         elif not self.pattern.fullmatch(value):
             raise BadDirectiveValue(f"{value} does not match {self.pattern.pattern}")
         super().__init__(value)
+
+
+TrustedTypesExpression = (
+    TrustedTypesPolicyName | TrustedTypesWildcardType | TrustedTypesKeyword
+)
+
+
+class UnrecognizedValueItem(ValueItem):
+    pattern = NOT_SEPARATOR
