@@ -262,13 +262,12 @@ class AutoHostSrc(AutoSrcDirective[DirectiveType, str], metaclass=ABCMeta):
         if port is not None:
             origin = f"{origin}:{port}"
 
-        # Sorting to avoid non-deterministic tests
+        # Sorting by file path to avoid non-deterministic tests
+        paths = sorted(self.files.items())
 
-        # TODO: sort by path instead of value
-        paths = sorted(self.files.values())
-        dynamic = [HostSrc(f"{origin}{path}") for path in paths]
+        dynamic_values = [HostSrc(f"{origin}{rel_path}") for _, rel_path in paths]
 
-        return self.directive(*self.static_values, *dynamic)
+        return self.directive(*self.static_values, *dynamic_values)
 
 
 # TODO: Revisit
