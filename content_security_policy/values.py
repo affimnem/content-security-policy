@@ -194,6 +194,10 @@ class SingleValueItem(ClassAsValue, ValueItem, ABC):
         super().__init__(value)
 
     @classmethod
+    def __eq__(cls, other):
+        return other is cls or isinstance(other, cls)
+
+    @classmethod
     def from_string(cls, value: str):
         return cls(_value=value)
 
