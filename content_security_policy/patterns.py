@@ -59,7 +59,7 @@ TOKEN_CHAR = f"[!#$%&'*+\-.^_`|~]|{ALPHA}|{DIGIT}"
 TOKEN = cast(re.Pattern, f"({TOKEN_CHAR})+")
 
 # https://datatracker.ietf.org/doc/html/rfc3986#appendix-A
-UNRESERVED = f"({ALPHA}|{DIGIT}|[-._~])"
+UNRESERVED = f"({ALPHA}|{DIGIT}|[\-._~])"
 HEXDIG = "[0-9a-fA-F]"
 PCT_ENCODED = f"%{HEXDIG}{HEXDIG}"
 # Deviating from rfc3986 here, since CSP explicitly excludes ";" and "," from ALL
@@ -70,7 +70,7 @@ PCHAR = f"({UNRESERVED}|{PCT_ENCODED}|{SUB_DELIMS}|@|:)"
 SEGMENT = f"{PCHAR}*"
 SEGMENT_NZ = f"{PCHAR}+"  # Non-Zero
 PATH_ABSOLUTE = f"/({SEGMENT_NZ}(/{SEGMENT})*)?"
-SCHEME = cast(re.Pattern, rf"{ALPHA}({ALPHA}|{DIGIT}|[+-.])*")
+SCHEME = cast(re.Pattern, rf"{ALPHA}({ALPHA}|{DIGIT}|[+\-.])*")
 DEC_OCTET = f"({DIGIT})|([1-9]{DIGIT})|(1{DIGIT}{{2}})|(2[0-4]{DIGIT})|(25[0-5])"
 IP_V4_ADDRESS = f"{DEC_OCTET}.{DEC_OCTET}.{DEC_OCTET}.{DEC_OCTET}"
 H16 = f"{HEXDIG}{{1,4}}"
