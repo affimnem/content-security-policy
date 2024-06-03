@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "content-security-policy"
-version = "0.2.2"
+version = "0.2.3"
 description = "Create, maintain, parse and manipulate Content Security Policies"
 authors = ["no.shoes <no.shoes@posteo.net>"]
 readme = "README.md"
