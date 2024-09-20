@@ -64,12 +64,12 @@ def value_item_from_string(
 
 
 def directive_from_string(directive_string: str) -> Directive:
-    separators = VALUE_ITEM_SEPARATOR.findall(directive_string)
-    tokens = VALUE_ITEM_SEPARATOR.split(directive_string)
+    trimmed_directive_string: str = directive_string.strip()
+    separators = VALUE_ITEM_SEPARATOR.findall(trimmed_directive_string)
+    tokens = VALUE_ITEM_SEPARATOR.split(trimmed_directive_string)
     if len(separators) != (len(tokens) - 1):
         raise ParsingError(
             "Mismatch in amount of tokens and separators. "
-            "Perhaps your directive is not trimmed?"
         )
     if len(tokens) == 0:
         raise ParsingError("No directive name found in directive string.")
@@ -88,12 +88,12 @@ def directive_from_string(directive_string: str) -> Directive:
 
 
 def policy_from_string(policy_string: str) -> Policy:
-    separators = DIRECTIVE_SEPARATOR.findall(policy_string)
-    directives = DIRECTIVE_SEPARATOR.split(policy_string)
+    trimmed_policy_string: strc = policy_string.strip()
+    separators = DIRECTIVE_SEPARATOR.findall(trimmed_policy_string)
+    directives = DIRECTIVE_SEPARATOR.split(trimmed_policy_string)
     if len(separators) != (len(directives) - 1):
         raise ParsingError(
             "Mismatch in amount of tokens and separators. "
-            "Perhaps your policy is not trimmed?"
         )
 
     # Trailing ';' ...
