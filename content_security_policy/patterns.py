@@ -48,18 +48,18 @@ ALPHA = cast(re.Pattern, r"[A-Za-z]")
 DIGIT = cast(re.Pattern, r"[0-9]")
 
 # https://w3c.github.io/webappsec-csp/#grammardef-base64-value
-BASE64_VALUE = cast(re.Pattern, rf"({ALPHA}|{DIGIT}|[+\/\-_]){{2, 0}}={{0, 2}}")
+BASE64_VALUE = cast(re.Pattern, f"({ALPHA}|{DIGIT}|" r"[+/\-_]){2,}={0,2}")
 NONCE_SOURCE = cast(re.Pattern, f"'nonce-{BASE64_VALUE}'")
 HASH_SOURCE = cast(
     re.Pattern, f"'({'|'.join(alg for alg in HASH_ALGORITHMS)})-{BASE64_VALUE}'"
 )
 
 # https://datatracker.ietf.org/doc/html/rfc9110#section-5.6.2
-TOKEN_CHAR = f"[!#$%&'*+\-.^_`|~]|{ALPHA}|{DIGIT}"
+TOKEN_CHAR = r"[!#$%&'*+\-.^_`|~]|" f"{ALPHA}|{DIGIT}"
 TOKEN = cast(re.Pattern, f"({TOKEN_CHAR})+")
 
 # https://datatracker.ietf.org/doc/html/rfc3986#appendix-A
-UNRESERVED = f"({ALPHA}|{DIGIT}|[\-._~])"
+UNRESERVED = f"({ALPHA}|{DIGIT}|" r"[\-._~])"
 HEXDIG = "[0-9a-fA-F]"
 PCT_ENCODED = f"%{HEXDIG}{HEXDIG}"
 # Deviating from rfc3986 here, since CSP explicitly excludes ";" and "," from ALL
