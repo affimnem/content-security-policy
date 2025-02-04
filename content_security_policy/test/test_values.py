@@ -2,9 +2,9 @@ from itertools import chain
 from unittest import TestCase
 
 from content_security_policy.constants import KEYWORD_SOURCES, NONE
-from content_security_policy.parse import _PARSING_RULES
+from content_security_policy.parse import _PARSING_RULES, value_item_from_string, SourceListDirective
 from content_security_policy.utils import kebab_to_snake
-from content_security_policy.values import KeywordSource, NoneSrc
+from content_security_policy.values import KeywordSource, NoneSrc, HashSrc, UnrecognizedValueItem
 
 
 class ValueCompleteness(TestCase):
@@ -39,3 +39,20 @@ class NoneSourceStr(TestCase):
         as_str = "'NOnE'"
         instance = NoneSrc(_value=as_str)
         self.assertEqual(as_str, str(instance))
+
+        
+class HashSrcValue(TestCase):
+    def test_valid_value(self):
+        valid_base64_hash = "'sha256-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ='"
+        valid_instance = value_item_from_string(valid_base64_hash, SourceListDirective)
+        self.assertIsInstance(valid_instance, HashSrc)
+
+    def test_invalid_algo(self):
+        valid_base64_hash = "'sha1-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ='"
+        invalid_instance = value_item_from_string(valid_base64_hash, SourceListDirective)
+        self.assertIsInstance(invalid_instance, UnrecognizedValueItem)
+
+    def test_invalid_hash(self):
+        valid_base64_hash = "'sha256-******invalid characters in hash value*****='"
+        invalid_instance = value_item_from_string(valid_base64_hash, SourceListDirective)
+        self.assertIsInstance(invalid_instance, UnrecognizedValueItem)
