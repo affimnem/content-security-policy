@@ -48,11 +48,11 @@ class HashSrcValue(TestCase):
         self.assertIsInstance(valid_instance, HashSrc)
 
     def test_invalid_algo(self):
-        valid_base64_hash = "'sha1-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ='"
-        invalid_instance = value_item_from_string(valid_base64_hash, SourceListDirective)
+        invalid_base64_algo = "'sha1-h20CPZ0QyXlBuAw7A+KluUYx/3pK+c7lYEpqLTlxjYQ='"
+        invalid_instance = value_item_from_string(invalid_base64_algo, SourceListDirective)
         self.assertIsInstance(invalid_instance, UnrecognizedValueItem)
 
     def test_invalid_hash(self):
-        valid_base64_hash = "'sha256-******invalid characters in hash value*****='"
-        invalid_instance = value_item_from_string(valid_base64_hash, SourceListDirective)
+        invalid_base64_hash = "'sha256-******invalid characters in hash value*****='"
+        invalid_instance = value_item_from_string(invalid_base64_hash, SourceListDirective)
         self.assertIsInstance(invalid_instance, UnrecognizedValueItem)
